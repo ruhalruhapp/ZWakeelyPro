@@ -207,13 +207,15 @@ function StatCardSkeleton() {
 
 // ─── Chart Skeleton ─────────────────────────────────────────────────────────
 
+const CHART_SKELETON_HEIGHTS = [65, 40, 85, 55, 95, 45];
+
 function ChartSkeleton() {
   return (
     <Card className="p-6">
       <Skeleton className="h-5 w-36 mb-6" />
       <div className="flex items-end gap-2 h-48">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="flex-1 rounded-t-md" style={{ height: `${30 + Math.random() * 70}%` }} />
+        {CHART_SKELETON_HEIGHTS.map((h, i) => (
+          <Skeleton key={i} className="flex-1 rounded-t-md" style={{ height: `${h}%` }} />
         ))}
       </div>
     </Card>
