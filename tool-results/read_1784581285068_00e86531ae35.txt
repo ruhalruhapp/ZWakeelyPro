@@ -1,0 +1,762 @@
+     1→'use client';
+     2→
+     3→import React, { useEffect, useMemo } from 'react';
+     4→import { motion } from 'framer-motion';
+     5→import { formatDistanceToNow } from 'date-fns';
+     6→import { ar } from 'date-fns/locale';
+     7→import {
+     8→  Briefcase,
+     9→  Activity,
+    10→  Calendar,
+    11→  DollarSign,
+    12→  FileText,
+    13→  Users,
+    14→  CreditCard,
+    15→  CheckSquare,
+    16→  Clock,
+    17→  ArrowUpRight,
+    18→  Scale,
+    19→  Gavel,
+    20→  MessageSquare,
+    21→  Star,
+    22→} from 'lucide-react';
+    23→import {
+    24→  BarChart,
+    25→  Bar,
+    26→  XAxis,
+    27→  YAxis,
+    28→  Tooltip,
+    29→  ResponsiveContainer,
+    30→  PieChart,
+    31→  Pie,
+    32→  Cell,
+    33→  Legend,
+    34→} from 'recharts';
+    35→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    36→import { Badge } from '@/components/ui/badge';
+    37→import { Skeleton } from '@/components/ui/skeleton';
+    38→import { ScrollArea } from '@/components/ui/scroll-area';
+    39→import {
+    40→  Table,
+    41→  TableBody,
+    42→  TableCell,
+    43→  TableHead,
+    44→  TableHeader,
+    45→  TableRow,
+    46→} from '@/components/ui/table';
+    47→import { useAppStore, type DashboardStats } from '@/stores/app-store';
+    48→import { t } from '@/lib/i18n';
+    49→
+    50→// ─── Color Helpers ──────────────────────────────────────────────────────────
+    51→
+    52→function getStatusColor(status: string) {
+    53→  const colors: Record<string, string> = {
+    54→    intake: 'bg-slate-100 text-slate-700 border-slate-200',
+    55→    active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    56→    discovery: 'bg-amber-50 text-amber-700 border-amber-200',
+    57→    trial: 'bg-rose-50 text-rose-700 border-rose-200',
+    58→    settlement: 'bg-teal-50 text-teal-700 border-teal-200',
+    59→    appeal: 'bg-orange-50 text-orange-700 border-orange-200',
+    60→    closed: 'bg-gray-100 text-gray-600 border-gray-200',
+    61→    archived: 'bg-slate-100 text-slate-500 border-slate-200',
+    62→  };
+    63→  return colors[status] || 'bg-gray-100 text-gray-600 border-gray-200';
+    64→}
+    65→
+    66→function getCaseTypeColor(type: string) {
+    67→  const colors: Record<string, string> = {
+    68→    civil: 'text-emerald-700 bg-emerald-50',
+    69→    criminal: 'text-rose-700 bg-rose-50',
+    70→    commercial: 'text-amber-700 bg-amber-50',
+    71→    labor: 'text-teal-700 bg-teal-50',
+    72→    family: 'text-purple-700 bg-purple-50',
+    73→    real_estate: 'text-orange-700 bg-orange-50',
+    74→    other: 'text-slate-600 bg-slate-50',
+    75→  };
+    76→  return colors[type] || 'text-slate-600 bg-slate-50';
+    77→}
+    78→
+    79→const statusChartColors: Record<string, string> = {
+    80→  intake: '#64748b',
+    81→  active: '#059669',
+    82→  discovery: '#d97706',
+    83→  trial: '#e11d48',
+    84→  settlement: '#0d9488',
+    85→  appeal: '#ea580c',
+    86→  closed: '#9ca3af',
+    87→  archived: '#475569',
+    88→};
+    89→
+    90→const caseTypeChartColors: Record<string, string> = {
+    91→  civil: '#059669',
+    92→  criminal: '#e11d48',
+    93→  commercial: '#d97706',
+    94→  labor: '#0d9488',
+    95→  family: '#7c3aed',
+    96→  real_estate: '#ea580c',
+    97→  other: '#64748b',
+    98→};
+    99→
+   100→// ─── Animation Variants ─────────────────────────────────────────────────────
+   101→
+   102→const fadeInUp = {
+   103→  hidden: { opacity: 0, y: 20 },
+   104→  visible: (i: number) => ({
+   105→    opacity: 1,
+   106→    y: 0,
+   107→    transition: { delay: i * 0.07, duration: 0.4, ease: 'easeOut' },
+   108→  }),
+   109→};
+   110→
+   111→// ─── Activity Icon Mapper ───────────────────────────────────────────────────
+   112→
+   113→function getActivityIcon(entity: string) {
+   114→  switch (entity) {
+   115→    case 'case':
+   116→      return <Briefcase className="w-4 h-4 text-emerald-600" />;
+   117→    case 'task':
+   118→      return <CheckSquare className="w-4 h-4 text-amber-600" />;
+   119→    case 'document':
+   120→      return <FileText className="w-4 h-4 text-slate-600" />;
+   121→    case 'billing':
+   122→      return <CreditCard className="w-4 h-4 text-teal-600" />;
+   123→    case 'client':
+   124→      return <Users className="w-4 h-4 text-orange-600" />;
+   125→    case 'hearing':
+   126→      return <Gavel className="w-4 h-4 text-rose-600" />;
+   127→    default:
+   128→      return <Activity className="w-4 h-4 text-slate-500" />;
+   129→  }
+   130→}
+   131→
+   132→function getActivityIconBg(entity: string) {
+   133→  switch (entity) {
+   134→    case 'case':
+   135→      return 'bg-emerald-50';
+   136→    case 'task':
+   137→      return 'bg-amber-50';
+   138→    case 'document':
+   139→      return 'bg-slate-100';
+   140→    case 'billing':
+   141→      return 'bg-teal-50';
+   142→    case 'client':
+   143→      return 'bg-orange-50';
+   144→    case 'hearing':
+   145→      return 'bg-rose-50';
+   146→    default:
+   147→      return 'bg-slate-50';
+   148→  }
+   149→}
+   150→
+   151→// ─── Custom Tooltip ─────────────────────────────────────────────────────────
+   152→
+   153→function CustomBarTooltip({
+   154→  active,
+   155→  payload,
+   156→  label,
+   157→}: {
+   158→  active?: boolean;
+   159→  payload?: Array<{ value: number; payload: { status: string } }>;
+   160→  label?: string;
+   161→}) {
+   162→  if (!active || !payload?.length) return null;
+   163→  const status = payload[0].payload.status;
+   164→  return (
+   165→    <div className="bg-white border border-slate-200 rounded-lg shadow-lg px-3 py-2 text-sm">
+   166→      <p className="font-medium text-slate-900">{label}</p>
+   167→      <p className="text-slate-500">
+   168→        {payload[0].value} {t('dashboard.totalCases', 'en').toLowerCase()}
+   169→      </p>
+   170→    </div>
+   171→  );
+   172→}
+   173→
+   174→function CustomPieTooltip({
+   175→  active,
+   176→  payload,
+   177→}: {
+   178→  active?: boolean;
+   179→  payload?: Array<{ name: string; value: number; payload: { caseType: string } }>;
+   180→}) {
+   181→  if (!active || !payload?.length) return null;
+   182→  return (
+   183→    <div className="bg-white border border-slate-200 rounded-lg shadow-lg px-3 py-2 text-sm">
+   184→      <p className="font-medium text-slate-900">{payload[0].name}</p>
+   185→      <p className="text-slate-500">
+   186→        {payload[0].value} {t('dashboard.totalCases', 'en').toLowerCase()}
+   187→      </p>
+   188→    </div>
+   189→  );
+   190→}
+   191→
+   192→// ─── Stat Card Skeleton ─────────────────────────────────────────────────────
+   193→
+   194→function StatCardSkeleton() {
+   195→  return (
+   196→    <Card className="p-6">
+   197→      <div className="flex items-center gap-4">
+   198→        <Skeleton className="h-12 w-12 rounded-xl" />
+   199→        <div className="flex-1 space-y-2">
+   200→          <Skeleton className="h-4 w-24" />
+   201→          <Skeleton className="h-7 w-16" />
+   202→        </div>
+   203→      </div>
+   204→    </Card>
+   205→  );
+   206→}
+   207→
+   208→// ─── Chart Skeleton ─────────────────────────────────────────────────────────
+   209→
+   210→function ChartSkeleton() {
+   211→  return (
+   212→    <Card className="p-6">
+   213→      <Skeleton className="h-5 w-36 mb-6" />
+   214→      <div className="flex items-end gap-2 h-48">
+   215→        {Array.from({ length: 6 }).map((_, i) => (
+   216→          <Skeleton key={i} className="flex-1 rounded-t-md" style={{ height: `${30 + Math.random() * 70}%` }} />
+   217→        ))}
+   218→      </div>
+   219→    </Card>
+   220→  );
+   221→}
+   222→
+   223→// ─── Pro Banner ─────────────────────────────────────────────────────────────
+   224→
+   225→function ProBanner({ language, featureFlags }: { language: 'en' | 'ar'; featureFlags: Record<string, boolean> }) {
+   226→  const enabledFeatures = Object.entries(featureFlags)
+   227→    .filter(([, enabled]) => enabled)
+   228→    .map(([key]) => key);
+   229→
+   230→  if (enabledFeatures.length === 0) return null;
+   231→
+   232→  const featureLabels: Record<string, { en: string; ar: string }> = {
+   233→    pro_dashboard: { en: 'Pro Dashboard', ar: 'لوحة تحكم برو' },
+   234→    advanced_analytics: { en: 'Advanced Analytics', ar: 'تحليلات متقدمة' },
+   235→    ai_assist: { en: 'AI Legal Assistant', ar: 'مساعد قانوني ذكي' },
+   236→    client_portal_sync: { en: 'Client Portal Sync', ar: 'مزامنة بوابة العميل' },
+   237→    bulk_operations: { en: 'Bulk Operations', ar: 'عمليات جماعية' },
+   238→  };
+   239→
+   240→  return (
+   241→    <motion.div
+   242→      initial={{ opacity: 0, y: -10 }}
+   243→      animate={{ opacity: 1, y: 0 }}
+   244→      transition={{ duration: 0.4 }}
+   245→    >
+   246→      <div className="relative overflow-hidden rounded-xl bg-gradient-to-l from-emerald-600 via-teal-600 to-emerald-700 px-6 py-4 text-white shadow-lg shadow-emerald-900/10">
+   247→        {/* Decorative circles */}
+   248→        <div className="absolute -top-6 -left-6 h-24 w-24 rounded-full bg-white/5" />
+   249→        <div className="absolute -bottom-4 -right-4 h-20 w-20 rounded-full bg-white/5" />
+   250→
+   251→        <div className="relative flex items-center justify-between gap-4">
+   252→          <div className="flex items-center gap-3">
+   253→            <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-white/15 backdrop-blur-sm">
+   254→              <Star className="w-5 h-5 text-amber-300" />
+   255→            </div>
+   256→            <div>
+   257→              <h3 className="font-bold text-sm tracking-wide">
+   258→                {language === 'ar' ? 'واكيلي برو' : 'Wakeely Pro'}
+   259→              </h3>
+   260→              <p className="text-emerald-100 text-xs mt-0.5">
+   261→                {language === 'ar' ? 'الميزات المفعّلة:' : 'Active features:'}
+   262→              </p>
+   263→            </div>
+   264→          </div>
+   265→          <div className="flex flex-wrap items-center gap-2">
+   266→            {enabledFeatures.map((key) => (
+   267→              <span
+   268→                key={key}
+   269→                className="inline-flex items-center gap-1 rounded-full bg-white/15 backdrop-blur-sm px-3 py-1 text-xs font-medium"
+   270→              >
+   271→                {featureLabels[key]
+   272→                  ? featureLabels[key][language]
+   273→                  : key.replace(/_/g, ' ')}
+   274→              </span>
+   275→            ))}
+   276→          </div>
+   277→        </div>
+   278→      </div>
+   279→    </motion.div>
+   280→  );
+   281→}
+   282→
+   283→// ─── Main Component ─────────────────────────────────────────────────────────
+   284→
+   285→export function DashboardView() {
+   286→  const {
+   287→    dashboardStats,
+   288→    setDashboardStats,
+   289→    language,
+   290→    setCurrentView,
+   291→    setSelectedCaseId,
+   292→    featureFlags,
+   293→    setFeatureFlags,
+   294→    isProMode,
+   295→  } = useAppStore();
+   296→
+   297→  const isRtl = language === 'ar';
+   298→
+   299→  // ─── Data Fetching ───────────────────────────────────────────────────────
+   300→
+   301→  useEffect(() => {
+   302→    async function loadData() {
+   303→      try {
+   304→        const [dashRes, flagsRes] = await Promise.all([
+   305→          fetch('/api/dashboard'),
+   306→          fetch('/api/feature-flags'),
+   307→        ]);
+   308→        const dashData = await dashRes.json();
+   309→        const flagsData = await flagsRes.json();
+   310→
+   311→        // Transform dashboard data
+   312→        const stats: DashboardStats = {
+   313→          totalCases: dashData.totalCases,
+   314→          activeCases:
+   315→            dashData.casesByStatus?.find((s: { status: string }) => s.status === 'active')
+   316→              ?.count ?? 0,
+   317→          pendingCases:
+   318→            dashData.casesByStatus?.find((s: { status: string }) => s.status === 'intake')
+   319→              ?.count ?? 0,
+   320→          closedCases:
+   321→            dashData.casesByStatus?.find((s: { status: string }) => s.status === 'closed')
+   322→              ?.count ?? 0,
+   323→          totalRevenue: dashData.billingSummary?.totalPaid ?? 0,
+   324→          pendingRevenue: dashData.billingSummary?.outstanding ?? 0,
+   325→          overdueTasks: dashData.billingSummary?.overdueCount ?? 0,
+   326→          upcomingHearings: dashData.nextHearings?.length ?? 0,
+   327→          casesByStatus: dashData.casesByStatus ?? [],
+   328→          casesByType: dashData.caseTypeDistribution ?? [],
+   329→          recentCases: dashData.recentCases ?? [],
+   330→          upcomingTasks: dashData.upcomingTasks ?? [],
+   331→          recentActivity: dashData.recentActivity ?? [],
+   332→        };
+   333→        setDashboardStats(stats);
+   334→
+   335→        // Transform feature flags
+   336→        const flagMap: Record<string, boolean> = {};
+   337→        (flagsData.flags ?? []).forEach((f: { key: string; enabled: boolean }) => {
+   338→          flagMap[f.key] = f.enabled;
+   339→        });
+   340→        setFeatureFlags(flagMap);
+   341→      } catch (err) {
+   342→        console.error('Failed to load dashboard:', err);
+   343→      }
+   344→    }
+   345→    loadData();
+   346→  }, [setDashboardStats, setFeatureFlags]);
+   347→
+   348→  // ─── Computed Data ───────────────────────────────────────────────────────
+   349→
+   350→  const barChartData = useMemo(() => {
+   351→    if (!dashboardStats) return [];
+   352→    return dashboardStats.casesByStatus.map((item) => ({
+   353→      ...item,
+   354→      fill: statusChartColors[item.status] || '#9ca3af',
+   355→    }));
+   356→  }, [dashboardStats]);
+   357→
+   358→  const pieChartData = useMemo(() => {
+   359→    if (!dashboardStats) return [];
+   360→    return dashboardStats.casesByType.map((item) => ({
+   361→      ...item,
+   362→      name:
+   363→        t(`caseType.${item.caseType === 'real_estate' ? 'realEstate' : item.caseType}`, language) ||
+   364→        item.caseType,
+   365→      fill: caseTypeChartColors[item.caseType] || '#64748b',
+   366→    }));
+   367→  }, [dashboardStats, language]);
+   368→
+   369→  const statCards = useMemo(() => {
+   370→    if (!dashboardStats) return [];
+   371→    return [
+   372→      {
+   373→        label: t('dashboard.totalCases', language),
+   374→        value: dashboardStats.totalCases,
+   375→        icon: Briefcase,
+   376→        bgClass: 'bg-emerald-50',
+   377→        iconClass: 'text-emerald-600',
+   378→        borderClass: 'border-emerald-100',
+   379→      },
+   380→      {
+   381→        label: t('dashboard.activeCases', language),
+   382→        value: dashboardStats.activeCases,
+   383→        icon: Activity,
+   384→        bgClass: 'bg-amber-50',
+   385→        iconClass: 'text-amber-600',
+   386→        borderClass: 'border-amber-100',
+   387→      },
+   388→      {
+   389→        label: t('dashboard.upcomingHearings', language),
+   390→        value: dashboardStats.upcomingHearings,
+   391→        icon: Calendar,
+   392→        bgClass: 'bg-rose-50',
+   393→        iconClass: 'text-rose-600',
+   394→        borderClass: 'border-rose-100',
+   395→      },
+   396→      {
+   397→        label: t('dashboard.totalRevenue', language),
+   398→        value: `${(dashboardStats.totalRevenue / 1000).toFixed(0)}K`,
+   399→        icon: DollarSign,
+   400→        bgClass: 'bg-emerald-50',
+   401→        iconClass: 'text-emerald-600',
+   402→        borderClass: 'border-emerald-100',
+   403→      },
+   404→    ];
+   405→  }, [dashboardStats, language]);
+   406→
+   407→  // ─── Render ──────────────────────────────────────────────────────────────
+   408→
+   409→  return (
+   410→    <div dir={isRtl ? 'rtl' : 'ltr'} className="space-y-6">
+   411→      {/* Pro Features Banner */}
+   412→      {isProMode() && <ProBanner language={language} featureFlags={featureFlags} />}
+   413→
+   414→      {/* ─── Stat Cards ──────────────────────────────────────────────────── */}
+   415→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+   416→        {dashboardStats
+   417→          ? statCards.map((card, i) => {
+   418→              const Icon = card.icon;
+   419→              return (
+   420→                <motion.div
+   421→                  key={card.label}
+   422→                  custom={i}
+   423→                  variants={fadeInUp}
+   424→                  initial="hidden"
+   425→                  animate="visible"
+   426→                >
+   427→                  <Card className="p-6 hover:shadow-md transition-shadow duration-200 cursor-default">
+   428→                    <div className="flex items-center gap-4">
+   429→                      <div
+   430→                        className={`flex items-center justify-center h-12 w-12 rounded-xl ${card.bgClass} ${card.borderClass} border`}
+   431→                      >
+   432→                        <Icon className={`w-6 h-6 ${card.iconClass}`} />
+   433→                      </div>
+   434→                      <div className="flex-1 min-w-0">
+   435→                        <p className="text-sm text-slate-500 truncate">{card.label}</p>
+   436→                        <p className="text-2xl font-bold text-slate-900 mt-0.5">{card.value}</p>
+   437→                      </div>
+   438→                    </div>
+   439→                  </Card>
+   440→                </motion.div>
+   441→              );
+   442→            })
+   443→          : Array.from({ length: 4 }).map((_, i) => (
+   444→              <motion.div
+   445→                key={i}
+   446→                custom={i}
+   447→                variants={fadeInUp}
+   448→                initial="hidden"
+   449→                animate="visible"
+   450→              >
+   451→                <StatCardSkeleton />
+   452→              </motion.div>
+   453→            ))}
+   454→      </div>
+   455→
+   456→      {/* ─── Charts Row ──────────────────────────────────────────────────── */}
+   457→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   458→        {/* Bar Chart — Cases by Status */}
+   459→        {dashboardStats ? (
+   460→          <motion.div custom={4} variants={fadeInUp} initial="hidden" animate="visible">
+   461→            <Card className="p-6">
+   462→              <CardHeader className="p-0 pb-4">
+   463→                <CardTitle className="text-base font-semibold text-slate-900">
+   464→                  {t('dashboard.casesByStatus', language)}
+   465→                </CardTitle>
+   466→              </CardHeader>
+   467→              <CardContent className="p-0">
+   468→                {barChartData.length > 0 ? (
+   469→                  <ResponsiveContainer width="100%" height={240}>
+   470→                    <BarChart
+   471→                      data={barChartData}
+   472→                      margin={{ top: 4, right: 0, left: -20, bottom: 0 }}
+   473→                    >
+   474→                      <XAxis
+   475→                        dataKey="status"
+   476→                        tickFormatter={(val: string) =>
+   477→                          t(`status.${val}`, language)
+   478→                        }
+   479→                        tick={{ fontSize: 12, fill: '#64748b' }}
+   480→                        axisLine={false}
+   481→                        tickLine={false}
+   482→                      />
+   483→                      <YAxis
+   484→                        allowDecimals={false}
+   485→                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+   486→                        axisLine={false}
+   487→                        tickLine={false}
+   488→                      />
+   489→                      <Tooltip content={<CustomBarTooltip />} />
+   490→                      <Bar
+   491→                        dataKey="count"
+   492→                        radius={[6, 6, 0, 0]}
+   493→                        maxBarSize={48}
+   494→                      >
+   495→                        {barChartData.map((entry, index) => (
+   496→                          <Cell key={`cell-${index}`} fill={entry.fill} />
+   497→                        ))}
+   498→                      </Bar>
+   499→                    </BarChart>
+   500→                  </ResponsiveContainer>
+   501→                ) : (
+   502→                  <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
+   503→                    {t('dashboard.noData', language)}
+   504→                  </div>
+   505→                )}
+   506→              </CardContent>
+   507→            </Card>
+   508→          </motion.div>
+   509→        ) : (
+   510→          <motion.div custom={4} variants={fadeInUp} initial="hidden" animate="visible">
+   511→            <ChartSkeleton />
+   512→          </motion.div>
+   513→        )}
+   514→
+   515→        {/* Pie Chart — Cases by Type */}
+   516→        {dashboardStats ? (
+   517→          <motion.div custom={5} variants={fadeInUp} initial="hidden" animate="visible">
+   518→            <Card className="p-6">
+   519→              <CardHeader className="p-0 pb-4">
+   520→                <CardTitle className="text-base font-semibold text-slate-900">
+   521→                  {t('dashboard.casesByType', language)}
+   522→                </CardTitle>
+   523→              </CardHeader>
+   524→              <CardContent className="p-0">
+   525→                {pieChartData.length > 0 ? (
+   526→                  <ResponsiveContainer width="100%" height={240}>
+   527→                    <PieChart>
+   528→                      <Pie
+   529→                        data={pieChartData}
+   530→                        cx="50%"
+   531→                        cy="50%"
+   532→                        innerRadius={60}
+   533→                        outerRadius={95}
+   534→                        paddingAngle={3}
+   535→                        dataKey="count"
+   536→                        nameKey="name"
+   537→                        stroke="none"
+   538→                      >
+   539→                        {pieChartData.map((entry, index) => (
+   540→                          <Cell key={`cell-${index}`} fill={entry.fill} />
+   541→                        ))}
+   542→                      </Pie>
+   543→                      <Tooltip content={<CustomPieTooltip />} />
+   544→                      <Legend
+   545→                        verticalAlign="bottom"
+   546→                        iconType="circle"
+   547→                        iconSize={8}
+   548→                        formatter={(value: string) => (
+   549→                          <span className="text-xs text-slate-600">{value}</span>
+   550→                        )}
+   551→                      />
+   552→                    </PieChart>
+   553→                  </ResponsiveContainer>
+   554→                ) : (
+   555→                  <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
+   556→                    {t('dashboard.noData', language)}
+   557→                  </div>
+   558→                )}
+   559→              </CardContent>
+   560→            </Card>
+   561→          </motion.div>
+   562→        ) : (
+   563→          <motion.div custom={5} variants={fadeInUp} initial="hidden" animate="visible">
+   564→            <ChartSkeleton />
+   565→          </motion.div>
+   566→        )}
+   567→      </div>
+   568→
+   569→      {/* ─── Bottom Row ──────────────────────────────────────────────────── */}
+   570→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   571→        {/* Recent Cases Table */}
+   572→        {dashboardStats ? (
+   573→          <motion.div custom={6} variants={fadeInUp} initial="hidden" animate="visible">
+   574→            <Card className="p-6">
+   575→              <CardHeader className="p-0 pb-4">
+   576→                <div className="flex items-center justify-between">
+   577→                  <CardTitle className="text-base font-semibold text-slate-900">
+   578→                    {t('dashboard.recentCases', language)}
+   579→                  </CardTitle>
+   580→                  <button
+   581→                    onClick={() => setCurrentView('cases')}
+   582→                    className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+   583→                  >
+   584→                    {t('action.view', language)}
+   585→                    <ArrowUpRight className={`w-3.5 h-3.5 ${isRtl ? 'rotate-90' : ''}`} />
+   586→                  </button>
+   587→                </div>
+   588→              </CardHeader>
+   589→              <CardContent className="p-0">
+   590→                {dashboardStats.recentCases.length > 0 ? (
+   591→                  <Table>
+   592→                    <TableHeader>
+   593→                      <TableRow className="hover:bg-transparent border-b border-slate-100">
+   594→                        <TableHead className="text-xs font-medium text-slate-500">
+   595→                          {t('cases.caseNumber', language)}
+   596→                        </TableHead>
+   597→                        <TableHead className="text-xs font-medium text-slate-500">
+   598→                          {t('cases.caseTitle', language)}
+   599→                        </TableHead>
+   600→                        <TableHead className="text-xs font-medium text-slate-500">
+   601→                          {t('cases.caseType', language)}
+   602→                        </TableHead>
+   603→                        <TableHead className="text-xs font-medium text-slate-500">
+   604→                          {t('common.status', language)}
+   605→                        </TableHead>
+   606→                        <TableHead className="text-xs font-medium text-slate-500">
+   607→                          {t('cases.client', language)}
+   608→                        </TableHead>
+   609→                      </TableRow>
+   610→                    </TableHeader>
+   611→                    <TableBody>
+   612→                      {dashboardStats.recentCases.slice(0, 5).map((c) => (
+   613→                        <TableRow
+   614→                          key={c.id}
+   615→                          className="cursor-pointer"
+   616→                          onClick={() => {
+   617→                            setSelectedCaseId(c.id);
+   618→                            setCurrentView('cases');
+   619→                          }}
+   620→                        >
+   621→                          <TableCell className="text-xs font-mono text-slate-500">
+   622→                            {c.caseNumber}
+   623→                          </TableCell>
+   624→                          <TableCell className="text-sm font-medium text-slate-900 max-w-[140px] truncate">
+   625→                            {c.title}
+   626→                          </TableCell>
+   627→                          <TableCell>
+   628→                            <span
+   629→                              className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${getCaseTypeColor(c.caseType)}`}
+   630→                            >
+   631→                              {t(
+   632→                                `caseType.${c.caseType === 'real_estate' ? 'realEstate' : c.caseType}`,
+   633→                                language,
+   634→                              )}
+   635→                            </span>
+   636→                          </TableCell>
+   637→                          <TableCell>
+   638→                            <Badge
+   639→                              variant="outline"
+   640→                              className={`text-xs ${getStatusColor(c.status)}`}
+   641→                            >
+   642→                              {t(`status.${c.status}`, language)}
+   643→                            </Badge>
+   644→                          </TableCell>
+   645→                          <TableCell className="text-sm text-slate-600 max-w-[120px] truncate">
+   646→                            {c.client?.fullName ?? '—'}
+   647→                          </TableCell>
+   648→                        </TableRow>
+   649→                      ))}
+   650→                    </TableBody>
+   651→                  </Table>
+   652→                ) : (
+   653→                  <div className="flex flex-col items-center justify-center h-48 text-slate-400 text-sm">
+   654→                    <Briefcase className="w-8 h-8 mb-2 text-slate-300" />
+   655→                    {t('cases.noCases', language)}
+   656→                  </div>
+   657→                )}
+   658→              </CardContent>
+   659→            </Card>
+   660→          </motion.div>
+   661→        ) : (
+   662→          <motion.div custom={6} variants={fadeInUp} initial="hidden" animate="visible">
+   663→            <Card className="p-6">
+   664→              <Skeleton className="h-5 w-36 mb-6" />
+   665→              <div className="space-y-3">
+   666→                {Array.from({ length: 5 }).map((_, i) => (
+   667→                  <div key={i} className="flex items-center gap-4">
+   668→                    <Skeleton className="h-4 w-20" />
+   669→                    <Skeleton className="h-4 flex-1" />
+   670→                    <Skeleton className="h-5 w-16 rounded-full" />
+   671→                    <Skeleton className="h-5 w-16 rounded-full" />
+   672→                  </div>
+   673→                ))}
+   674→              </div>
+   675→            </Card>
+   676→          </motion.div>
+   677→        )}
+   678→
+   679→        {/* Recent Activity Feed */}
+   680→        {dashboardStats ? (
+   681→          <motion.div custom={7} variants={fadeInUp} initial="hidden" animate="visible">
+   682→            <Card className="p-6">
+   683→              <CardHeader className="p-0 pb-4">
+   684→                <CardTitle className="text-base font-semibold text-slate-900">
+   685→                  {t('dashboard.recentActivity', language)}
+   686→                </CardTitle>
+   687→              </CardHeader>
+   688→              <CardContent className="p-0">
+   689→                {dashboardStats.recentActivity.length > 0 ? (
+   690→                  <ScrollArea className="max-h-96">
+   691→                    <div className="space-y-1">
+   692→                      {dashboardStats.recentActivity.map((activity, idx) => (
+   693→                        <div
+   694→                          key={activity.id}
+   695→                          className={`flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors ${
+   696→                            idx < dashboardStats.recentActivity.length - 1
+   697→                              ? ''
+   698→                              : ''
+   699→                          }`}
+   700→                        >
+   701→                          <div
+   702→                            className={`flex items-center justify-center h-8 w-8 rounded-lg shrink-0 mt-0.5 ${getActivityIconBg(activity.entity)}`}
+   703→                          >
+   704→                            {getActivityIcon(activity.entity)}
+   705→                          </div>
+   706→                          <div className="flex-1 min-w-0">
+   707→                            <p className="text-sm text-slate-700 leading-relaxed">
+   708→                              {activity.lawyer?.name && (
+   709→                                <span className="font-semibold text-slate-900">
+   710→                                  {activity.lawyer.name}
+   711→                                </span>
+   712→                              )}
+   713→                              {activity.lawyer?.name ? ' ' : ''}
+   714→                              {activity.description ?? activity.action}
+   715→                            </p>
+   716→                            <div className="flex items-center gap-1.5 mt-1">
+   717→                              <Clock className="w-3 h-3 text-slate-400" />
+   718→                              <span className="text-xs text-slate-400">
+   719→                                {formatDistanceToNow(new Date(activity.createdAt), {
+   720→                                  addSuffix: true,
+   721→                                  locale: language === 'ar' ? ar : undefined,
+   722→                                })}
+   723→                              </span>
+   724→                            </div>
+   725→                          </div>
+   726→                        </div>
+   727→                      ))}
+   728→                    </div>
+   729→                  </ScrollArea>
+   730→                ) : (
+   731→                  <div className="flex flex-col items-center justify-center h-48 text-slate-400 text-sm">
+   732→                    <MessageSquare className="w-8 h-8 mb-2 text-slate-300" />
+   733→                    {t('dashboard.noData', language)}
+   734→                  </div>
+   735→                )}
+   736→              </CardContent>
+   737→            </Card>
+   738→          </motion.div>
+   739→        ) : (
+   740→          <motion.div custom={7} variants={fadeInUp} initial="hidden" animate="visible">
+   741→            <Card className="p-6">
+   742→              <Skeleton className="h-5 w-36 mb-6" />
+   743→              <div className="space-y-4">
+   744→                {Array.from({ length: 5 }).map((_, i) => (
+   745→                  <div key={i} className="flex items-start gap-3">
+   746→                    <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
+   747→                    <div className="flex-1 space-y-2">
+   748→                      <Skeleton className="h-4 w-3/4" />
+   749→                      <Skeleton className="h-3 w-24" />
+   750→                    </div>
+   751→                  </div>
+   752→                ))}
+   753→              </div>
+   754→            </Card>
+   755→          </motion.div>
+   756→        )}
+   757→      </div>
+   758→    </div>
+   759→  );
+   760→}
+   761→
+   762→export default DashboardView;
