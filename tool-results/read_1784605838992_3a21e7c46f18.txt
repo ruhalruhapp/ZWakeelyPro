@@ -1,0 +1,918 @@
+     1→import { NextResponse } from 'next/server';
+     2→import { db } from '@/lib/db';
+     3→
+     4→export async function POST() {
+     5→  const counts = {
+     6→    lawyer: 0,
+     7→    teamMembers: 0,
+     8→    clients: 0,
+     9→    cases: 0,
+    10→    tasks: 0,
+    11→    featureFlags: 0,
+    12→    caseParties: 0,
+    13→    taskAssignments: 0,
+    14→    timeEntries: 0,
+    15→    expenses: 0,
+    16→    calendarEvents: 0,
+    17→    evidence: 0,
+    18→    privilegeLogs: 0,
+    19→    billing: 0,
+    20→    timelineEvents: 0,
+    21→    activities: 0,
+    22→  };
+    23→
+    24→  const errors: string[] = [];
+    25→
+    26→  try {
+    27→    // ─── 1. Lawyer ───────────────────────────────────────────────
+    28→    try {
+    29→      await db.lawyer.create({
+    30→        data: {
+    31→          id: 'lawyer-1',
+    32→          name: 'Dr. Ahmed Al-Rashid',
+    33→          email: 'ahmed@wakeely.com',
+    34→          role: 'lawyer',
+    35→          firm: 'Al-Rashid & Partners',
+    36→          licenseNo: 'SA-LAW-2020-1547',
+    37→          phone: '+966501234567',
+    38→        },
+    39→      });
+    40→      counts.lawyer = 1;
+    41→    } catch (e: unknown) {
+    42→      const msg = e instanceof Error ? e.message : String(e);
+    43→      errors.push(`Lawyer: ${msg}`);
+    44→    }
+    45→
+    46→    // ─── 2. Team Members ──────────────────────────────────────────
+    47→    try {
+    48→      await db.teamMember.createMany({
+    49→        data: [
+    50→          {
+    51→            id: 'member-1',
+    52→            name: 'Sara Al-Fahad',
+    53→            email: 'sara@wakeely.com',
+    54→            role: 'senior_associate',
+    55→            specialization: 'Commercial Law',
+    56→            lawyerId: 'lawyer-1',
+    57→          },
+    58→          {
+    59→            id: 'member-2',
+    60→            name: 'Omar Al-Harbi',
+    61→            email: 'omar@wakeely.com',
+    62→            role: 'associate',
+    63→            specialization: 'Criminal Law',
+    64→            lawyerId: 'lawyer-1',
+    65→          },
+    66→          {
+    67→            id: 'member-3',
+    68→            name: 'Fatima Al-Zahrani',
+    69→            email: 'fatima@wakeely.com',
+    70→            role: 'paralegal',
+    71→            lawyerId: 'lawyer-1',
+    72→          },
+    73→          {
+    74→            id: 'member-4',
+    75→            name: 'Khalid Al-Qahtani',
+    76→            email: 'khalid@wakeely.com',
+    77→            role: 'partner',
+    78→            specialization: 'Corporate Law',
+    79→            lawyerId: 'lawyer-1',
+    80→          },
+    81→          {
+    82→            id: 'member-5',
+    83→            name: 'Noura Al-Saeed',
+    84→            email: 'noura@wakeely.com',
+    85→            role: 'trainee',
+    86→            lawyerId: 'lawyer-1',
+    87→          },
+    88→        ],
+    89→      });
+    90→      counts.teamMembers = 5;
+    91→    } catch (e: unknown) {
+    92→      const msg = e instanceof Error ? e.message : String(e);
+    93→      errors.push(`TeamMembers: ${msg}`);
+    94→    }
+    95→
+    96→    // ─── 3. Clients ───────────────────────────────────────────────
+    97→    try {
+    98→      await db.client.createMany({
+    99→        data: [
+   100→          {
+   101→            id: 'client-1',
+   102→            name: 'Mohammed Al-Salem',
+   103→            email: 'mohammed@email.com',
+   104→            type: 'individual',
+   105→            phone: '+966551112233',
+   106→            lawyerId: 'lawyer-1',
+   107→          },
+   108→          {
+   109→            id: 'client-2',
+   110→            name: 'TechVentures Inc',
+   111→            email: 'info@techventures.sa',
+   112→            type: 'corporate',
+   113→            phone: '+966112345678',
+   114→            crNumber: '1010123456',
+   115→            lawyerId: 'lawyer-1',
+   116→          },
+   117→          {
+   118→            id: 'client-3',
+   119→            name: 'Aisha Al-Dosari',
+   120→            email: 'aisha@email.com',
+   121→            type: 'individual',
+   122→            phone: '+966554445566',
+   123→            lawyerId: 'lawyer-1',
+   124→          },
+   125→          {
+   126→            id: 'client-4',
+   127→            name: 'Gulf Construction Co',
+   128→            email: 'contact@gulfconstruction.sa',
+   129→            type: 'corporate',
+   130→            phone: '+966119876543',
+   131→            crNumber: '1010987654',
+   132→            lawyerId: 'lawyer-1',
+   133→          },
+   134→          {
+   135→            id: 'client-5',
+   136→            name: 'Fahad Al-Otaibi',
+   137→            email: 'fahad@email.com',
+   138→            type: 'individual',
+   139→            phone: '+966557778899',
+   140→            lawyerId: 'lawyer-1',
+   141→          },
+   142→        ],
+   143→      });
+   144→      counts.clients = 5;
+   145→    } catch (e: unknown) {
+   146→      const msg = e instanceof Error ? e.message : String(e);
+   147→      errors.push(`Clients: ${msg}`);
+   148→    }
+   149→
+   150→    // ─── 4. Cases ─────────────────────────────────────────────────
+   151→    try {
+   152→      await db.case.createMany({
+   153→        data: [
+   154→          {
+   155→            id: 'case-1',
+   156→            caseNumber: 'CAS-2024-001',
+   157→            title: 'Al-Salem vs. National Bank — Breach of Loan Agreement',
+   158→            description:
+   159→              'Client claims the bank improperly accelerated a commercial loan and imposed excessive penalties in violation of SAMA regulations.',
+   160→            status: 'active',
+   161→            type: 'commercial',
+   162→            priority: 'high',
+   163→            court: 'Riyadh Commercial Court - First Instance',
+   164→            lawyerId: 'lawyer-1',
+   165→            clientId: 'client-1',
+   166→            filedAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+   167→            nextHearing: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+   168→          },
+   169→          {
+   170→            id: 'case-2',
+   171→            caseNumber: 'CAS-2024-002',
+   172→            title: 'TechVentures Inc — Intellectual Property Dispute',
+   173→            description:
+   174→              'Software patent infringement claim by a former contractor seeking ownership of proprietary code developed during engagement.',
+   175→            status: 'active',
+   176→            type: 'commercial',
+   177→            priority: 'high',
+   178→            court: 'Riyadh Commercial Court - Appeals',
+   179→            lawyerId: 'lawyer-1',
+   180→            clientId: 'client-2',
+   181→            filedAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+   182→            nextHearing: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
+   183→          },
+   184→          {
+   185→            id: 'case-3',
+   186→            caseNumber: 'CAS-2024-003',
+   187→            title: 'Al-Dosari — Khula & Custody Proceedings',
+   188→            description:
+   189→              'Client seeking khula dissolution of marriage and full custody of three minor children with visitation schedule for father.',
+   190→            status: 'pending',
+   191→            type: 'family',
+   192→            priority: 'medium',
+   193→            court: 'Jeddah Family Court',
+   194→            lawyerId: 'lawyer-1',
+   195→            clientId: 'client-3',
+   196→            filedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+   197→          },
+   198→          {
+   199→            id: 'case-4',
+   200→            caseNumber: 'CAS-2024-004',
+   201→            title: 'Gulf Construction Co — Contract Performance Claim',
+   202→            description:
+   203→              'Developer failed to complete Phase 2 of the residential compound within the contractual timeline causing significant financial losses.',
+   204→            status: 'active',
+   205→            type: 'real_estate',
+   206→            priority: 'high',
+   207→            court: 'Dammam General Court',
+   208→            lawyerId: 'lawyer-1',
+   209→            clientId: 'client-4',
+   210→            filedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+   211→            nextHearing: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+   212→          },
+   213→          {
+   214→            id: 'case-5',
+   215→            caseNumber: 'CAS-2024-005',
+   216→            title: 'Al-Otaibi — Traffic Accident Criminal Liability',
+   217→            description:
+   218→              'Client facing criminal charges following a fatal traffic collision on King Fahd Road. Claiming contributory negligence by other driver.',
+   219→            status: 'intake',
+   220→            type: 'criminal',
+   221→            priority: 'high',
+   222→            court: 'Riyadh Criminal Court',
+   223→            lawyerId: 'lawyer-1',
+   224→            clientId: 'client-5',
+   225→            filedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+   226→          },
+   227→          {
+   228→            id: 'case-6',
+   229→            caseNumber: 'CAS-2024-006',
+   230→            title: 'Al-Rashid & Partners — Labor Dispute (Employee Termination)',
+   231→            description:
+   232→              'Wrongful termination claim by former office manager alleging unfair dismissal without cause under Saudi Labor Law.',
+   233→            status: 'on_hold',
+   234→            type: 'labor',
+   235→            priority: 'low',
+   236→            court: 'Riyadh Labor Court',
+   237→            lawyerId: 'lawyer-1',
+   238→            clientId: 'client-1',
+   239→            filedAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+   240→          },
+   241→          {
+   242→            id: 'case-7',
+   243→            caseNumber: 'CAS-2024-007',
+   244→            title: 'TechVentures Inc — Shareholder Agreement Amendment',
+   245→            description:
+   246→              'Drafting and negotiating amendments to the shareholders agreement following Series B funding round.',
+   247→            status: 'closed',
+   248→            type: 'corporate',
+   249→            priority: 'medium',
+   250→            court: '',
+   251→            lawyerId: 'lawyer-1',
+   252→            clientId: 'client-2',
+   253→            filedAt: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000),
+   254→            closedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+   255→          },
+   256→          {
+   257→            id: 'case-8',
+   258→            caseNumber: 'CAS-2024-008',
+   259→            title: 'Al-Dosari — Property Inheritance Division',
+   260→            description:
+   261→              'Partitioning of deceased father\'s estate including three properties in Jeddah and bank accounts per Islamic inheritance rules.',
+   262→            status: 'pending',
+   263→            type: 'family',
+   264→            priority: 'medium',
+   265→            court: 'Jeddah General Court',
+   266→            lawyerId: 'lawyer-1',
+   267→            clientId: 'client-3',
+   268→            filedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000),
+   269→          },
+   270→          {
+   271→            id: 'case-9',
+   272→            caseNumber: 'CAS-2024-009',
+   273→            title: 'Gulf Construction Co — Government Contract Dispute',
+   274→            description:
+   275→              'Dispute with Ministry of Housing over delayed payments for public infrastructure project in the Eastern Province.',
+   276→            status: 'active',
+   277→            type: 'commercial',
+   278→            priority: 'critical',
+   279→            court: 'Board of Grievances - Dammam',
+   280→            lawyerId: 'lawyer-1',
+   281→            clientId: 'client-4',
+   282→            filedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+   283→            nextHearing: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+   284→          },
+   285→          {
+   286→            id: 'case-10',
+   287→            caseNumber: 'CAS-2024-010',
+   288→            title: 'Al-Otaibi — Employment Visa Transfer',
+   289→            description:
+   290→              'Assisting client with employer sponsorship transfer and resolving exit/re-entry visa complications.',
+   291→            status: 'closed',
+   292→            type: 'labor',
+   293→            priority: 'low',
+   294→            court: '',
+   295→            lawyerId: 'lawyer-1',
+   296→            clientId: 'client-5',
+   297→            filedAt: new Date(Date.now() - 75 * 24 * 60 * 60 * 1000),
+   298→            closedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+   299→          },
+   300→          {
+   301→            id: 'case-11',
+   302→            caseNumber: 'CAS-2024-001-A',
+   303→            title: 'Al-Salem vs. National Bank — Counter-claim Defense',
+   304→            description:
+   305→              'Bank filed counter-claim alleging client defaulted on personal guarantee. Preparing defense strategy and evidence.',
+   306→            status: 'active',
+   307→            type: 'commercial',
+   308→            priority: 'high',
+   309→            court: 'Riyadh Commercial Court - First Instance',
+   310→            lawyerId: 'lawyer-1',
+   311→            clientId: 'client-1',
+   312→            parentId: 'case-1',
+   313→            filedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+   314→            nextHearing: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+   315→          },
+   316→          {
+   317→            id: 'case-12',
+   318→            caseNumber: 'CAS-2024-001-B',
+   319→            title: 'Al-Salem vs. National Bank — Freezing Order Challenge',
+   320→            description:
+   321→              'Challenging the preliminary asset freeze order obtained by the bank. Filed motion to lift restrictions on client accounts.',
+   322→            status: 'pending',
+   323→            type: 'commercial',
+   324→            priority: 'critical',
+   325→            court: 'Riyadh Commercial Court - First Instance',
+   326→            lawyerId: 'lawyer-1',
+   327→            clientId: 'client-1',
+   328→            parentId: 'case-1',
+   329→            filedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+   330→            nextHearing: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+   331→          },
+   332→        ],
+   333→      });
+   334→      counts.cases = 12;
+   335→    } catch (e: unknown) {
+   336→      const msg = e instanceof Error ? e.message : String(e);
+   337→      errors.push(`Cases: ${msg}`);
+   338→    }
+   339→
+   340→    // ─── 5. Tasks ─────────────────────────────────────────────────
+   341→    try {
+   342→      await db.task.createMany({
+   343→        data: [
+   344→          {
+   345→            id: 'task-1',
+   346→            title: 'Review loan agreement and identify penalty clauses',
+   347→            description: 'Analyze the original loan contract between Al-Salem and National Bank for SAMA compliance.',
+   348→            status: 'completed',
+   349→            priority: 'high',
+   350→            category: 'review',
+   351→            caseId: 'case-1',
+   352→            dueDate: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000),
+   353→          },
+   354→          {
+   355→            id: 'task-2',
+   356→            title: 'Draft statement of claim for breach of contract',
+   357→            description: 'Prepare formal statement of claim for filing at Riyadh Commercial Court.',
+   358→            status: 'completed',
+   359→            priority: 'high',
+   360→            category: 'drafting',
+   361→            caseId: 'case-1',
+   362→            dueDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+   363→          },
+   364→          {
+   365→            id: 'task-3',
+   366→            title: 'Research SAMA regulations on loan acceleration',
+   367→            description: 'Gather regulatory precedents and SAMA circulars regarding commercial loan acceleration procedures.',
+   368→            status: 'in_progress',
+   369→            priority: 'medium',
+   370→            category: 'research',
+   371→            caseId: 'case-1',
+   372→            dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+   373→          },
+   374→          {
+   375→            id: 'task-4',
+   376→            title: 'Prepare expert witness report on software code',
+   377→            description: 'Coordinate with forensic software analyst to produce expert report on code similarity.',
+   378→            status: 'pending',
+   379→            priority: 'high',
+   380→            category: 'review',
+   381→            caseId: 'case-2',
+   382→            dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+   383→          },
+   384→          {
+   385→            id: 'task-5',
+   386→            title: 'File motion for protective order on source code',
+   387→            description: 'Seek court order to protect proprietary source code from disclosure during discovery.',
+   388→            status: 'in_progress',
+   389→            priority: 'high',
+   390→            category: 'filing',
+   391→            caseId: 'case-2',
+   392→            dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+   393→          },
+   394→          {
+   395→            id: 'task-6',
+   396→            title: 'Draft khula petition and supporting affidavit',
+   397→            description: 'Prepare khula petition citing irreconcilable differences and financial grounds.',
+   398→            status: 'completed',
+   399→            priority: 'medium',
+   400→            category: 'drafting',
+   401→            caseId: 'case-3',
+   402→            dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+   403→          },
+   404→          {
+   405→            id: 'task-7',
+   406→            title: 'Collect and organize marriage financial records',
+   407→            description: 'Gather mahr records, joint account statements, and property documentation.',
+   408→            status: 'completed',
+   409→            priority: 'medium',
+   410→            category: 'research',
+   411→            caseId: 'case-3',
+   412→            dueDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+   413→          },
+   414→          {
+   415→            id: 'task-8',
+   416→            title: 'Attend site inspection at residential compound',
+   417→            description: 'Inspect Phase 2 construction site to document incomplete work and defects.',
+   418→            status: 'completed',
+   419→            priority: 'high',
+   420→            category: 'court',
+   421→            caseId: 'case-4',
+   422→            dueDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+   423→          },
+   424→          {
+   425→            id: 'task-9',
+   426→            title: 'Obtain construction delay expert opinion',
+   427→            description: 'Engage engineering consultant to assess delay and quantify damages.',
+   428→            status: 'in_progress',
+   429→            priority: 'high',
+   430→            category: 'research',
+   431→            caseId: 'case-4',
+   432→            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+   433→          },
+   434→          {
+   435→            id: 'task-10',
+   436→            title: 'Review traffic police report and forensic evidence',
+   437→            description: 'Analyze Najiz traffic accident report, CCTV footage, and witness statements.',
+   438→            status: 'pending',
+   439→            priority: 'critical',
+   440→            category: 'review',
+   441→            caseId: 'case-5',
+   442→            dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+   443→          },
+   444→          {
+   445→            id: 'task-11',
+   446→            title: 'Prepare client for criminal court hearing',
+   447→            description: 'Brief Al-Otaibi on court procedures, likely questions, and defense strategy.',
+   448→            status: 'pending',
+   449→            priority: 'high',
+   450→            category: 'meeting',
+   451→            caseId: 'case-5',
+   452→            dueDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
+   453→          },
+   454→          {
+   455→            id: 'task-12',
+   456→            title: 'Draft defense memorandum for counter-claim',
+   457→            description: 'Prepare comprehensive defense to bank\'s counter-claim on personal guarantee.',
+   458→            status: 'in_progress',
+   459→            priority: 'high',
+   460→            category: 'drafting',
+   461→            caseId: 'case-11',
+   462→            dueDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
+   463→          },
+   464→          {
+   465→            id: 'task-13',
+   466→            title: 'File motion to lift asset freeze order',
+   467→            description: 'Draft and file urgent motion challenging the preliminary freezing of client accounts.',
+   468→            status: 'in_progress',
+   469→            priority: 'critical',
+   470→            category: 'filing',
+   471→            caseId: 'case-12',
+   472→            dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+   473→          },
+   474→          {
+   475→            id: 'task-14',
+   476→            title: 'Draft shareholders agreement amendment',
+   477→            description: 'Incorporate Series B investor rights, board composition changes, and liquidation preferences.',
+   478→            status: 'completed',
+   479→            priority: 'medium',
+   480→            category: 'drafting',
+   481→            caseId: 'case-7',
+   482→            dueDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+   483→          },
+   484→          {
+   485→            id: 'task-15',
+   486→            title: 'Research inheritance shares under Islamic law',
+   487→            description: 'Calculate exact inheritance fractions for all heirs and prepare division proposal.',
+   488→            status: 'in_progress',
+   489→            priority: 'medium',
+   490→            category: 'research',
+   491→            caseId: 'case-8',
+   492→            dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+   493→          },
+   494→          {
+   495→            id: 'task-16',
+   496→            title: 'Prepare government contract claim submission',
+   497→            description: 'Draft detailed claim for delayed payments including interest calculation and supporting invoices.',
+   498→            status: 'in_progress',
+   499→            priority: 'critical',
+   500→            category: 'drafting',
+   501→            caseId: 'case-9',
+   502→            dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+   503→          },
+   504→          {
+   505→            id: 'task-17',
+   506→            title: 'Compile financial documents for Board of Grievances',
+   507→            description: 'Organize all invoices, correspondence with Ministry, and project milestone records.',
+   508→            status: 'pending',
+   509→            priority: 'high',
+   510→            category: 'filing',
+   511→            caseId: 'case-9',
+   512→            dueDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
+   513→          },
+   514→          {
+   515→            id: 'task-18',
+   516→            title: 'Client meeting — case strategy review',
+   517→            description: 'Meet with Mohammed Al-Salem to discuss settlement options and trial timeline.',
+   518→            status: 'pending',
+   519→            priority: 'medium',
+   520→            category: 'meeting',
+   521→            caseId: 'case-1',
+   522→            dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+   523→          },
+   524→          {
+   525→            id: 'task-19',
+   526→            title: 'Review opposing counsel\'s discovery responses',
+   527→            description: 'Analyze National Bank\'s document production for completeness and identify gaps.',
+   528→            status: 'pending',
+   529→            priority: 'medium',
+   530→            category: 'review',
+   531→            caseId: 'case-1',
+   532→            dueDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
+   533→          },
+   534→          {
+   535→            id: 'task-20',
+   536→            title: 'Draft witness list for TechVentures IP case',
+   537→            description: 'Prepare and file list of witnesses with brief testimony summaries.',
+   538→            status: 'pending',
+   539→            priority: 'medium',
+   540→            category: 'filing',
+   541→            caseId: 'case-2',
+   542→            dueDate: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000),
+   543→          },
+   544→          {
+   545→            id: 'task-21',
+   546→            title: 'Organize custody documentation',
+   547→            description: 'Compile school records, medical reports, and character references for custody hearing.',
+   548→            status: 'in_progress',
+   549→            priority: 'high',
+   550→            category: 'research',
+   551→            caseId: 'case-3',
+   552→            dueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+   553→          },
+   554→          {
+   555→            id: 'task-22',
+   556→            title: 'Prepare mediation brief for Gulf Construction',
+   557→            description: 'Draft position paper for court-ordered mediation with developer.',
+   558→            status: 'pending',
+   559→            priority: 'medium',
+   560→            category: 'drafting',
+   561→            caseId: 'case-4',
+   562→            dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+   563→          },
+   564→          {
+   565→            id: 'task-23',
+   566→            title: 'Obtain and review CCTV footage from traffic accident',
+   567→            description: 'Coordinate with traffic department to obtain official CCTV recording of the collision.',
+   568→            status: 'pending',
+   569→            priority: 'high',
+   570→            category: 'research',
+   571→            caseId: 'case-5',
+   572→            dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+   573→          },
+   574→          {
+   575→            id: 'task-24',
+   576→            title: 'File property valuation requests for inheritance',
+   577→            description: 'Submit requests to three licensed property valuers for Jeddah properties.',
+   578→            status: 'pending',
+   579→            priority: 'low',
+   580→            category: 'filing',
+   581→            caseId: 'case-8',
+   582→            dueDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
+   583→          },
+   584→          {
+   585→            id: 'task-25',
+   586→            title: 'Prepare closing memo for Shareholder Agreement case',
+   587→            description: 'Draft final closing memorandum documenting completed amendments and next steps.',
+   588→            status: 'completed',
+   589→            priority: 'low',
+   590→            category: 'drafting',
+   591→            caseId: 'case-7',
+   592→            dueDate: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000),
+   593→          },
+   594→        ],
+   595→      });
+   596→      counts.tasks = 25;
+   597→    } catch (e: unknown) {
+   598→      const msg = e instanceof Error ? e.message : String(e);
+   599→      errors.push(`Tasks: ${msg}`);
+   600→    }
+   601→
+   602→    // ─── 6. Feature Flags ─────────────────────────────────────────
+   603→    try {
+   604→      await db.featureFlag.createMany({
+   605→        data: [
+   606→          { key: 'kanban_board', enabled: true, description: 'Kanban board view for task management' },
+   607→          { key: 'ai_assistant', enabled: true, description: 'AI-powered legal assistant for document review' },
+   608→          { key: 'time_tracking', enabled: true, description: 'Time tracking and billing integration' },
+   609→          { key: 'team_management', enabled: true, description: 'Advanced team collaboration features' },
+   610→          { key: 'evidence_management', enabled: false, description: 'Digital evidence management and chain of custody' },
+   611→          { key: 'client_portal', enabled: false, description: 'Self-service client portal for case updates' },
+   612→          { key: 'advanced_analytics', enabled: false, description: 'Advanced analytics and reporting dashboards' },
+   613→          { key: 'calendar_sync', enabled: false, description: 'Two-way calendar sync with Google and Outlook' },
+   614→        ],
+   615→      });
+   616→      counts.featureFlags = 8;
+   617→    } catch (e: unknown) {
+   618→      const msg = e instanceof Error ? e.message : String(e);
+   619→      errors.push(`FeatureFlags: ${msg}`);
+   620→    }
+   621→
+   622→    // ─── 7. Case Parties ──────────────────────────────────────────
+   623→    try {
+   624→      await db.caseParty.createMany({
+   625→        data: [
+   626→          // Case 1 - Al-Salem vs. National Bank
+   627→          { id: 'party-1', caseId: 'case-1', name: 'Mohammed Al-Salem', role: 'plaintiff', contactInfo: '+966551112233' },
+   628→          { id: 'party-2', caseId: 'case-1', name: 'National Bank of Saudi Arabia', role: 'defendant', contactInfo: 'legal@nbsa.sa' },
+   629→          { id: 'party-3', caseId: 'case-1', name: 'Mr. Hassan Al-Mutairi', role: 'opposing_counsel', contactInfo: 'hassan@nbsa-legal.sa' },
+   630→          { id: 'party-4', caseId: 'case-1', name: 'Judge Sheikh Abdulrahman Al-Bakr', role: 'judge', contactInfo: '' },
+   631→
+   632→          // Case 2 - TechVentures IP
+   633→          { id: 'party-5', caseId: 'case-2', name: 'TechVentures Inc', role: 'plaintiff', contactInfo: 'info@techventures.sa' },
+   634→          { id: 'party-6', caseId: 'case-2', name: 'Youssef Al-Ramadi', role: 'defendant', contactInfo: 'youssef@gmail.com' },
+   635→          { id: 'party-7', caseId: 'case-2', name: 'Dr. Layla Al-Shammari', role: 'expert', contactInfo: 'layla@forensic-tech.sa' },
+   636→          { id: 'party-8', caseId: 'case-2', name: 'Ms. Huda Al-Ghamdi', role: 'opposing_counsel', contactInfo: 'huda@ip-law.sa' },
+   637→
+   638→          // Case 3 - Khula & Custody
+   639→          { id: 'party-9', caseId: 'case-3', name: 'Aisha Al-Dosari', role: 'plaintiff', contactInfo: '+966554445566' },
+   640→          { id: 'party-10', caseId: 'case-3', name: 'Majed Al-Dosari', role: 'defendant', contactInfo: '+966553334444' },
+   641→          { id: 'party-11', caseId: 'case-3', name: 'Judge Dr. Salman Al-Omar', role: 'judge', contactInfo: '' },
+   642→
+   643→          // Case 4 - Gulf Construction
+   644→          { id: 'party-12', caseId: 'case-4', name: 'Gulf Construction Co', role: 'plaintiff', contactInfo: 'contact@gulfconstruction.sa' },
+   645→          { id: 'party-13', caseId: 'case-4', name: 'Al-Majd Development LLC', role: 'defendant', contactInfo: 'legal@almajd-dev.sa' },
+   646→          { id: 'party-14', caseId: 'case-4', name: 'Eng. Fawaz Al-Dosari', role: 'expert', contactInfo: 'fawaz@engineering-consult.sa' },
+   647→          { id: 'party-15', caseId: 'case-4', name: 'Mr. Nasser Al-Harbi', role: 'opposing_counsel', contactInfo: 'nasser@almajd-legal.sa' },
+   648→
+   649→          // Case 5 - Criminal Traffic
+   650→          { id: 'party-16', caseId: 'case-5', name: 'Fahad Al-Otaibi', role: 'defendant', contactInfo: '+966557778899' },
+   651→          { id: 'party-17', caseId: 'case-5', name: 'Public Prosecution', role: 'plaintiff', contactInfo: '' },
+   652→          { id: 'party-18', caseId: 'case-5', name: 'Officer Tariq Al-Shehri', role: 'witness', contactInfo: 'traffic@riyadh-police.sa' },
+   653→          { id: 'party-19', caseId: 'case-5', name: 'Judge Sheikh Ibrahim Al-Farsi', role: 'judge', contactInfo: '' },
+   654→
+   655→          // Case 9 - Government Contract
+   656→          { id: 'party-20', caseId: 'case-9', name: 'Gulf Construction Co', role: 'plaintiff', contactInfo: 'contact@gulfconstruction.sa' },
+   657→          { id: 'party-21', caseId: 'case-9', name: 'Ministry of Housing', role: 'defendant', contactInfo: 'legal@moh.gov.sa' },
+   658→
+   659→          // Case 11 - Counter-claim
+   660→          { id: 'party-22', caseId: 'case-11', name: 'Mohammed Al-Salem', role: 'defendant', contactInfo: '+966551112233' },
+   661→          { id: 'party-23', caseId: 'case-11', name: 'National Bank of Saudi Arabia', role: 'plaintiff', contactInfo: 'legal@nbsa.sa' },
+   662→          { id: 'party-24', caseId: 'case-11', name: 'Mr. Hassan Al-Mutairi', role: 'opposing_counsel', contactInfo: 'hassan@nbsa-legal.sa' },
+   663→
+   664→          // Case 12 - Freezing Order
+   665→          { id: 'party-25', caseId: 'case-12', name: 'Mohammed Al-Salem', role: 'plaintiff', contactInfo: '+966551112233' },
+   666→          { id: 'party-26', caseId: 'case-12', name: 'National Bank of Saudi Arabia', role: 'defendant', contactInfo: 'legal@nbsa.sa' },
+   667→
+   668→          // Case 8 - Inheritance
+   669→          { id: 'party-27', caseId: 'case-8', name: 'Aisha Al-Dosari', role: 'plaintiff', contactInfo: '+966554445566' },
+   670→          { id: 'party-28', caseId: 'case-8', name: 'Dr. Riyadh Al-Zahrani', role: 'expert', contactInfo: 'riyadh@valuation.sa' },
+   671→
+   672→          // Case 6 - Labor Dispute
+   673→          { id: 'party-29', caseId: 'case-6', name: 'Former Employee - Lina Al-Ahmari', role: 'plaintiff', contactInfo: 'lina@gmail.com' },
+   674→          { id: 'party-30', caseId: 'case-6', name: 'Al-Rashid & Partners', role: 'defendant', contactInfo: 'ahmed@wakeely.com' },
+   675→        ],
+   676→      });
+   677→      counts.caseParties = 30;
+   678→    } catch (e: unknown) {
+   679→      const msg = e instanceof Error ? e.message : String(e);
+   680→      errors.push(`CaseParties: ${msg}`);
+   681→    }
+   682→
+   683→    // ─── 8. Task Assignments ──────────────────────────────────────
+   684→    try {
+   685→      await db.taskAssignment.createMany({
+   686→        data: [
+   687→          { id: 'assign-1', taskId: 'task-1', teamMemberId: 'member-1', assignedAt: new Date(Date.now() - 55 * 24 * 60 * 60 * 1000) },
+   688→          { id: 'assign-2', taskId: 'task-2', teamMemberId: 'member-1', assignedAt: new Date(Date.now() - 48 * 24 * 60 * 60 * 1000) },
+   689→          { id: 'assign-3', taskId: 'task-3', teamMemberId: 'member-3', assignedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) },
+   690→          { id: 'assign-4', taskId: 'task-5', teamMemberId: 'member-4', assignedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+   691→          { id: 'assign-5', taskId: 'task-6', teamMemberId: 'member-1', assignedAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000) },
+   692→          { id: 'assign-6', taskId: 'task-8', teamMemberId: 'member-2', assignedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000) },
+   693→          { id: 'assign-7', taskId: 'task-10', teamMemberId: 'member-2', assignedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+   694→          { id: 'assign-8', taskId: 'task-12', teamMemberId: 'member-4', assignedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) },
+   695→          { id: 'assign-9', taskId: 'task-13', teamMemberId: 'member-1', assignedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+   696→          { id: 'assign-10', taskId: 'task-16', teamMemberId: 'member-4', assignedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) },
+   697→        ],
+   698→      });
+   699→      counts.taskAssignments = 10;
+   700→    } catch (e: unknown) {
+   701→      const msg = e instanceof Error ? e.message : String(e);
+   702→      errors.push(`TaskAssignments: ${msg}`);
+   703→    }
+   704→
+   705→    // ─── 9. Time Entries ──────────────────────────────────────────
+   706→    try {
+   707→      await db.timeEntry.createMany({
+   708→        data: [
+   709→          { id: 'time-1', caseId: 'case-1', teamMemberId: 'member-1', description: 'Legal research on case precedents', duration: 120, rate: 1200, date: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000), activityType: 'research', billed: false },
+   710→          { id: 'time-2', caseId: 'case-1', teamMemberId: 'member-1', description: 'Drafting motion to dismiss', duration: 180, rate: 1200, date: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), activityType: 'drafting', billed: false },
+   711→          { id: 'time-3', caseId: 'case-1', teamMemberId: 'member-3', description: 'Document review and organization', duration: 90, rate: 500, date: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000), activityType: 'review', billed: false },
+   712→          { id: 'time-4', caseId: 'case-2', teamMemberId: 'member-4', description: 'Client consultation on IP strategy', duration: 60, rate: 1500, date: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000), activityType: 'meeting', billed: true },
+   713→          { id: 'time-5', caseId: 'case-2', teamMemberId: 'member-1', description: 'Reviewing expert witness qualifications', duration: 45, rate: 1200, date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), activityType: 'review', billed: false },
+   714→          { id: 'time-6', caseId: 'case-3', teamMemberId: 'member-1', description: 'Client consultation — khula proceedings', duration: 75, rate: 1200, date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), activityType: 'meeting', billed: false },
+   715→          { id: 'time-7', caseId: 'case-4', teamMemberId: 'member-2', description: 'Site inspection at construction compound', duration: 180, rate: 1000, date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), activityType: 'court', billed: false },
+   716→          { id: 'time-8', caseId: 'case-4', teamMemberId: 'member-2', description: 'Drafting mediation brief', duration: 120, rate: 1000, date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), activityType: 'drafting', billed: false },
+   717→          { id: 'time-9', caseId: 'case-5', teamMemberId: 'member-2', description: 'Reviewing police and forensic reports', duration: 90, rate: 1000, date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), activityType: 'review', billed: false },
+   718→          { id: 'time-10', caseId: 'case-9', teamMemberId: 'member-4', description: 'Drafting government contract claim', duration: 150, rate: 1500, date: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), activityType: 'drafting', billed: false },
+   719→          { id: 'time-11', caseId: 'case-9', teamMemberId: 'member-3', description: 'Organizing financial documentation', duration: 60, rate: 500, date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), activityType: 'research', billed: false },
+   720→          { id: 'time-12', caseId: 'case-11', teamMemberId: 'member-4', description: 'Legal research on personal guarantee defenses', duration: 105, rate: 1500, date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), activityType: 'research', billed: false },
+   721→          { id: 'time-13', caseId: 'case-12', teamMemberId: 'member-1', description: 'Drafting urgent motion to lift freeze', duration: 60, rate: 1200, date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), activityType: 'drafting', billed: false },
+   722→          { id: 'time-14', caseId: 'case-8', teamMemberId: 'member-3', description: 'Research on Islamic inheritance calculations', duration: 90, rate: 500, date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), activityType: 'research', billed: false },
+   723→          { id: 'time-15', caseId: 'case-7', teamMemberId: 'member-4', description: 'Final review of shareholders agreement', duration: 45, rate: 1500, date: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000), activityType: 'review', billed: true },
+   724→        ],
+   725→      });
+   726→      counts.timeEntries = 15;
+   727→    } catch (e: unknown) {
+   728→      const msg = e instanceof Error ? e.message : String(e);
+   729→      errors.push(`TimeEntries: ${msg}`);
+   730→    }
+   731→
+   732→    // ─── 10. Expenses ─────────────────────────────────────────────
+   733→    try {
+   734→      await db.expense.createMany({
+   735→        data: [
+   736→          { id: 'exp-1', caseId: 'case-1', description: 'Court filing fees — Commercial Court', amount: 2500, category: 'filing', date: new Date(Date.now() - 55 * 24 * 60 * 60 * 1000), receiptUrl: '' },
+   737→          { id: 'exp-2', caseId: 'case-2', description: 'Expert witness fee — software forensics', amount: 15000, category: 'expert', date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000), receiptUrl: '' },
+   738→          { id: 'exp-3', caseId: 'case-4', description: 'Travel expenses — Dammam site visit', amount: 1800, category: 'travel', date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), receiptUrl: '' },
+   739→          { id: 'exp-4', caseId: 'case-4', description: 'Engineering consultant — delay assessment', amount: 22000, category: 'expert', date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), receiptUrl: '' },
+   740→          { id: 'exp-5', caseId: 'case-1', description: 'Courier service — legal documents to court', amount: 350, category: 'courier', date: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000), receiptUrl: '' },
+   741→          { id: 'exp-6', caseId: 'case-9', description: 'Court filing fees — Board of Grievances', amount: 5000, category: 'filing', date: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000), receiptUrl: '' },
+   742→          { id: 'exp-7', caseId: 'case-5', description: 'Police report and traffic department fees', amount: 200, category: 'filing', date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), receiptUrl: '' },
+   743→          { id: 'exp-8', caseId: 'case-3', description: 'Court translation services — Arabic to English', amount: 1200, category: 'expert', date: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), receiptUrl: '' },
+   744→        ],
+   745→      });
+   746→      counts.expenses = 8;
+   747→    } catch (e: unknown) {
+   748→      const msg = e instanceof Error ? e.message : String(e);
+   749→      errors.push(`Expenses: ${msg}`);
+   750→    }
+   751→
+   752→    // ─── 11. Calendar Events ──────────────────────────────────────
+   753→    try {
+   754→      const now = Date.now();
+   755→      const day = 24 * 60 * 60 * 1000;
+   756→      await db.calendarEvent.createMany({
+   757→        data: [
+   758→          { id: 'cal-1', caseId: 'case-1', title: 'Hearing — Preliminary Objections', type: 'hearing', start: new Date(now + 14 * day), end: new Date(now + 14 * day + 2 * 60 * 60 * 1000), location: 'Riyadh Commercial Court - Hall 3', description: 'Preliminary hearing on bank\'s procedural objections.' },
+   759→          { id: 'cal-2', caseId: 'case-2', title: 'Mediation Session — IP Dispute', type: 'mediation', start: new Date(now + 21 * day), end: new Date(now + 21 * day + 3 * 60 * 60 * 1000), location: 'Riyadh Center for Commercial Arbitration', description: 'Court-referred mediation with opposing party.' },
+   760→          { id: 'cal-3', caseId: 'case-4', title: 'Site Inspection — Residential Compound', type: 'hearing', start: new Date(now + 7 * day), end: new Date(now + 7 * day + 5 * 60 * 60 * 1000), location: 'Al-Majd Residential Compound, Dammam', description: 'Joint site inspection with court-appointed expert.' },
+   761→          { id: 'cal-4', caseId: 'case-5', title: 'Criminal Court Hearing', type: 'hearing', start: new Date(now + 28 * day), end: new Date(now + 28 * day + 2 * 60 * 60 * 1000), location: 'Riyadh Criminal Court - Chamber 5', description: 'Initial hearing on traffic accident charges.' },
+   762→          { id: 'cal-5', caseId: 'case-1', title: 'Client Meeting — Al-Salem', type: 'meeting', start: new Date(now + 4 * day), end: new Date(now + 4 * day + 60 * 60 * 1000), location: 'Al-Rashid & Partners Office - Meeting Room A', description: 'Discuss settlement options and trial preparation.' },
+   763→          { id: 'cal-6', caseId: 'case-3', title: 'Filing Deadline — Khula Petition Amendment', type: 'deadline', start: new Date(now + 10 * day), end: new Date(now + 10 * day), location: '', description: 'Deadline to submit amended khula petition with additional documentation.' },
+   764→          { id: 'cal-7', caseId: 'case-9', title: 'Board of Grievances Hearing', type: 'hearing', start: new Date(now + 10 * day), end: new Date(now + 10 * day + 3 * 60 * 60 * 1000), location: 'Board of Grievances - Dammam Branch', description: 'First hearing on government contract payment dispute.' },
+   765→          { id: 'cal-8', caseId: 'case-12', title: 'Urgent Motion Hearing — Asset Freeze', type: 'hearing', start: new Date(now + 5 * day), end: new Date(now + 5 * day + 60 * 60 * 1000), location: 'Riyadh Commercial Court - Emergency Chamber', description: 'Emergency hearing on motion to lift asset freeze.' },
+   766→          { id: 'cal-9', caseId: 'case-2', title: 'Filing Deadline — Expert Report Submission', type: 'filing', start: new Date(now + 15 * day), end: new Date(now + 15 * day), location: 'Riyadh Commercial Court Registry', description: 'Submit expert witness report on software code analysis.' },
+   767→          { id: 'cal-10', caseId: 'case-4', title: 'Mediation — Construction Dispute', type: 'mediation', start: new Date(now + 30 * day), end: new Date(now + 30 * day + 4 * 60 * 60 * 1000), location: 'Dammam Mediation Center', description: 'Court-ordered mediation between Gulf Construction and Al-Majd Development.' },
+   768→          { id: 'cal-11', caseId: 'case-11', title: 'Filing Deadline — Defense Memorandum', type: 'deadline', start: new Date(now + 8 * day), end: new Date(now + 8 * day), location: '', description: 'Submit defense memorandum to counter-claim by National Bank.' },
+   769→          { id: 'cal-12', caseId: 'case-5', title: 'Client Preparation Meeting', type: 'meeting', start: new Date(now + 25 * day), end: new Date(now + 25 * day + 90 * 60 * 1000), location: 'Al-Rashid & Partners Office - Conference Room', description: 'Prepare Al-Otaibi for criminal hearing and review defense strategy.' },
+   770→          { id: 'cal-13', caseId: 'case-8', title: 'Property Valuation Meeting', type: 'meeting', start: new Date(now + 20 * day), end: new Date(now + 20 * day + 2 * 60 * 60 * 1000), location: 'Dr. Al-Zahrani Office, Jeddah', description: 'Review preliminary property valuations for inheritance case.' },
+   771→          { id: 'cal-14', caseId: 'case-1', title: 'Trial Commencement — Al-Salem vs. National Bank', type: 'trial', start: new Date(now + 45 * day), end: new Date(now + 45 * day + 4 * 60 * 60 * 1000), location: 'Riyadh Commercial Court - Hall 1', description: 'First day of trial proceedings.' },
+   772→          { id: 'cal-15', caseId: 'case-9', title: 'Document Submission Deadline', type: 'filing', start: new Date(now + 18 * day), end: new Date(now + 18 * day), location: 'Board of Grievances - Dammam Registry', description: 'Submit all supporting financial documents and invoices.' },
+   773→        ],
+   774→      });
+   775→      counts.calendarEvents = 15;
+   776→    } catch (e: unknown) {
+   777→      const msg = e instanceof Error ? e.message : String(e);
+   778→      errors.push(`CalendarEvents: ${msg}`);
+   779→    }
+   780→
+   781→    // ─── 12. Evidence Items ───────────────────────────────────────
+   782→    try {
+   783→      await db.evidence.createMany({
+   784→        data: [
+   785→          { id: 'evid-1', caseId: 'case-1', title: 'Original Loan Agreement (Arabic)', type: 'document', description: 'Signed loan agreement between Al-Salem and National Bank dated 15/03/2023.', privilegeStatus: 'none', dateAdded: new Date(Date.now() - 55 * 24 * 60 * 60 * 1000) },
+   786→          { id: 'evid-2', caseId: 'case-1', title: 'Bank Penalty Calculation Spreadsheet', type: 'digital', description: 'Excel file showing the bank\'s penalty and interest calculations.', privilegeStatus: 'none', dateAdded: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000) },
+   787→          { id: 'evid-3', caseId: 'case-1', title: 'Internal Bank Communication — Legal Strategy', type: 'document', description: 'Email chain between bank\'s legal team discussing litigation strategy. Obtained via discovery.', privilegeStatus: 'privileged', dateAdded: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000) },
+   788→          { id: 'evid-4', caseId: 'case-2', title: 'Source Code Comparison Report', type: 'digital', description: 'Forensic analysis comparing TechVentures codebase with defendant\'s published application.', privilegeStatus: 'none', dateAdded: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+   789→          { id: 'evid-5', caseId: 'case-4', title: 'Construction Site Photographs', type: 'photo', description: '48 photographs documenting incomplete Phase 2 construction work and structural defects.', privilegeStatus: 'none', dateAdded: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000) },
+   790→          { id: 'evid-6', caseId: 'case-4', title: 'Engineering Assessment Report', type: 'document', description: 'Detailed engineering report on construction delays, defects, and cost of remediation.', privilegeStatus: 'none', dateAdded: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000) },
+   791→          { id: 'evid-7', caseId: 'case-5', title: 'CCTV Footage — King Fahd Road Collision', type: 'digital', description: 'Traffic camera recording of the accident from two angles. Duration: 45 seconds.', privilegeStatus: 'none', dateAdded: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000) },
+   792→          { id: 'evid-8', caseId: 'case-5', title: 'Witness Testimony — bystander Abdullah Al-Ghamdi', type: 'testimony', description: 'Recorded statement of bystander who witnessed the collision. Statement taken by police.', privilegeStatus: 'none', dateAdded: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+   793→        ],
+   794→      });
+   795→      counts.evidence = 8;
+   796→    } catch (e: unknown) {
+   797→      const msg = e instanceof Error ? e.message : String(e);
+   798→      errors.push(`Evidence: ${msg}`);
+   799→    }
+   800→
+   801→    // ─── 13. Privilege Log Entries ────────────────────────────────
+   802→    try {
+   803→      await db.privilegeLog.createMany({
+   804→        data: [
+   805→          { id: 'priv-1', evidenceId: 'evid-3', caseId: 'case-1', description: 'Attorney-client communication between bank and its legal counsel regarding settlement strategy and exposure assessment.', privilegeType: 'attorney_client', date: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000) },
+   806→          { id: 'priv-2', evidenceId: 'evid-3', caseId: 'case-1', description: 'Internal bank memorandum prepared in anticipation of litigation containing risk assessment and settlement range analysis.', privilegeType: 'work_product', date: new Date(Date.now() - 34 * 24 * 60 * 60 * 1000) },
+   807→          { id: 'priv-3', evidenceId: 'evid-3', caseId: 'case-1', description: 'Legal opinion from external counsel on SAMA regulation compliance for the disputed loan terms.', privilegeType: 'attorney_client', date: new Date(Date.now() - 33 * 24 * 60 * 60 * 1000) },
+   808→          { id: 'priv-4', evidenceId: 'evid-3', caseId: 'case-1', description: 'Draft defense strategy document outlining possible motions and procedural arguments.', privilegeType: 'work_product', date: new Date(Date.now() - 32 * 24 * 60 * 60 * 1000) },
+   809→          { id: 'priv-5', evidenceId: 'evid-3', caseId: 'case-1', description: 'Settlement negotiation notes from bank-internal meeting with authorized representatives.', privilegeType: 'settlement', date: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000) },
+   810→        ],
+   811→      });
+   812→      counts.privilegeLogs = 5;
+   813→    } catch (e: unknown) {
+   814→      const msg = e instanceof Error ? e.message : String(e);
+   815→      errors.push(`PrivilegeLogs: ${msg}`);
+   816→    }
+   817→
+   818→    // ─── 14. Billing Entries ──────────────────────────────────────
+   819→    try {
+   820→      await db.billing.createMany({
+   821→        data: [
+   822→          { id: 'bill-1', caseId: 'case-1', clientId: 'client-1', description: 'Legal fees — case preparation and research (Month 1)', amount: 45000, status: 'paid', issuedDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), dueDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), paidDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) },
+   823→          { id: 'bill-2', caseId: 'case-1', clientId: 'client-1', description: 'Legal fees — hearings and motion drafting (Month 2)', amount: 38000, status: 'pending', issuedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), dueDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000), paidDate: null },
+   824→          { id: 'bill-3', caseId: 'case-2', clientId: 'client-2', description: 'IP dispute — initial consultation and case assessment', amount: 25000, status: 'paid', issuedDate: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000), dueDate: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000), paidDate: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000) },
+   825→          { id: 'bill-4', caseId: 'case-2', clientId: 'client-2', description: 'IP dispute — expert engagement and motion filing', amount: 55000, status: 'draft', issuedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), dueDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000), paidDate: null },
+   826→          { id: 'bill-5', caseId: 'case-4', clientId: 'client-4', description: 'Construction dispute — site inspection and expert coordination', amount: 42000, status: 'pending', issuedDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), dueDate: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000), paidDate: null },
+   827→          { id: 'bill-6', caseId: 'case-7', clientId: 'client-2', description: 'Shareholders agreement — drafting and negotiation (Final)', amount: 35000, status: 'paid', issuedDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), paidDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+   828→          { id: 'bill-7', caseId: 'case-9', clientId: 'client-4', description: 'Government contract dispute — claim preparation', amount: 65000, status: 'draft', issuedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), dueDate: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000), paidDate: null },
+   829→          { id: 'bill-8', caseId: 'case-3', clientId: 'client-3', description: 'Family case — khula petition and initial filings', amount: 20000, status: 'pending', issuedDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), dueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000), paidDate: null },
+   830→          { id: 'bill-9', caseId: 'case-11', clientId: 'client-1', description: 'Counter-claim defense — research and memorandum drafting', amount: 30000, status: 'draft', issuedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), dueDate: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000), paidDate: null },
+   831→          { id: 'bill-10', caseId: 'case-5', clientId: 'client-5', description: 'Criminal defense — initial case review and consultation', amount: 15000, status: 'paid', issuedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), dueDate: new Date(Date.now() + 27 * 24 * 60 * 60 * 1000), paidDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) },
+   832→        ],
+   833→      });
+   834→      counts.billing = 10;
+   835→    } catch (e: unknown) {
+   836→      const msg = e instanceof Error ? e.message : String(e);
+   837→      errors.push(`Billing: ${msg}`);
+   838→    }
+   839→
+   840→    // ─── 15. Timeline Events ──────────────────────────────────────
+   841→    try {
+   842→      const now = Date.now();
+   843→      const day = 24 * 60 * 60 * 1000;
+   844→      await db.timelineEvent.createMany({
+   845→        data: [
+   846→          { id: 'tl-1', caseId: 'case-1', title: 'Case filed at Riyadh Commercial Court', description: 'Statement of claim submitted to the court registry.', type: 'filing', date: new Date(now - 60 * day), actorId: 'lawyer-1' },
+   847→          { id: 'tl-2', caseId: 'case-1', title: 'Bank served with statement of claim', description: 'National Bank formally served via court bailiff.', type: 'milestone', date: new Date(now - 50 * day), actorId: 'member-1' },
+   848→          { id: 'tl-3', caseId: 'case-1', title: 'Bank filed counter-claim on personal guarantee', description: 'National Bank responded with counter-claim (Case CAS-2024-001-A).', type: 'filing', date: new Date(now - 30 * day), actorId: 'member-1' },
+   849→          { id: 'tl-4', caseId: 'case-1', title: 'Asset freeze order issued by court', description: 'Court granted preliminary asset freeze on client accounts pending resolution.', type: 'court_order', date: new Date(now - 10 * day), actorId: 'member-4' },
+   850→          { id: 'tl-5', caseId: 'case-2', title: 'Forensic code analysis completed', description: 'Expert witness submitted initial findings on code similarity assessment.', type: 'milestone', date: new Date(now - 20 * day), actorId: 'member-4' },
+   851→          { id: 'tl-6', caseId: 'case-3', title: 'Khula petition filed at Family Court', description: 'Petition submitted to Jeddah Family Court with supporting documentation.', type: 'filing', date: new Date(now - 20 * day), actorId: 'member-1' },
+   852→          { id: 'tl-7', caseId: 'case-4', title: 'Joint site inspection completed', description: 'Court-appointed expert, both parties, and legal teams conducted site visit.', type: 'milestone', date: new Date(now - 20 * day), actorId: 'member-2' },
+   853→          { id: 'tl-8', caseId: 'case-4', title: 'Engineering expert report submitted', description: 'Comprehensive engineering assessment filed documenting delays and defects.', type: 'filing', date: new Date(now - 12 * day), actorId: 'member-2' },
+   854→          { id: 'tl-9', caseId: 'case-5', title: 'Client retained for criminal defense', description: 'Fahad Al-Otaibi signed retainer agreement for criminal traffic defense.', type: 'milestone', date: new Date(now - 5 * day), actorId: 'lawyer-1' },
+   855→          { id: 'tl-10', caseId: 'case-7', title: 'Shareholders agreement amendments executed', description: 'All parties signed the amended shareholders agreement following Series B round.', type: 'milestone', date: new Date(now - 18 * day), actorId: 'member-4' },
+   856→          { id: 'tl-11', caseId: 'case-9', title: 'Claim submitted to Board of Grievances', description: 'Detailed claim for delayed payments filed against Ministry of Housing.', type: 'filing', date: new Date(now - 25 * day), actorId: 'member-4' },
+   857→          { id: 'tl-12', caseId: 'case-9', title: 'Board of Grievances acknowledged receipt', description: 'Board confirmed receipt and assigned case reference number.', type: 'milestone', date: new Date(now - 20 * day), actorId: 'member-3' },
+   858→          { id: 'tl-13', caseId: 'case-11', title: 'Defense strategy meeting held', description: 'Internal team meeting to outline counter-claim defense strategy.', type: 'milestone', date: new Date(now - 5 * day), actorId: 'member-4' },
+   859→          { id: 'tl-14', caseId: 'case-12', title: 'Motion to lift asset freeze filed', description: 'Urgent motion submitted to court seeking to dissolve the freezing order.', type: 'filing', date: new Date(now - 2 * day), actorId: 'member-1' },
+   860→          { id: 'tl-15', caseId: 'case-8', title: 'Inheritance division petition filed', description: 'Petition for estate partitioning submitted to Jeddah General Court.', type: 'filing', date: new Date(now - 40 * day), actorId: 'member-3' },
+   861→        ],
+   862→      });
+   863→      counts.timelineEvents = 15;
+   864→    } catch (e: unknown) {
+   865→      const msg = e instanceof Error ? e.message : String(e);
+   866→      errors.push(`TimelineEvents: ${msg}`);
+   867→    }
+   868→
+   869→    // ─── 16. Activities (Audit Trail) ─────────────────────────────
+   870→    try {
+   871→      await db.activity.createMany({
+   872→        data: [
+   873→          { id: 'act-1', action: 'case.created', entityType: 'case', entityId: 'case-1', details: 'Created case CAS-2024-001: Al-Salem vs. National Bank', userId: 'lawyer-1', timestamp: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) },
+   874→          { id: 'act-2', action: 'client.created', entityType: 'client', entityId: 'client-2', details: 'Added new corporate client: TechVentures Inc', userId: 'lawyer-1', timestamp: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000) },
+   875→          { id: 'act-3', action: 'task.completed', entityType: 'task', entityId: 'task-2', details: 'Completed: Draft statement of claim for breach of contract', userId: 'member-1', timestamp: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000) },
+   876→          { id: 'act-4', action: 'case.status_changed', entityType: 'case', entityId: 'case-7', details: 'Changed case CAS-2024-007 status from active to closed', userId: 'member-4', timestamp: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) },
+   877→          { id: 'act-5', action: 'evidence.uploaded', entityType: 'evidence', entityId: 'evid-5', details: 'Uploaded 48 construction site photographs to case CAS-2024-004', userId: 'member-2', timestamp: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000) },
+   878→          { id: 'act-6', action: 'billing.issued', entityType: 'billing', entityId: 'bill-3', details: 'Issued invoice #BILL-003 to TechVentures Inc for SAR 25,000', userId: 'member-4', timestamp: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000) },
+   879→          { id: 'act-7', action: 'task.assigned', entityType: 'task', entityId: 'task-10', details: 'Assigned "Review traffic police report" to Omar Al-Harbi', userId: 'lawyer-1', timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+   880→          { id: 'act-8', action: 'case.created', entityType: 'case', entityId: 'case-12', details: 'Created sub-case CAS-2024-001-B: Asset Freeze Challenge (child of CAS-2024-001)', userId: 'member-1', timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) },
+   881→          { id: 'act-9', action: 'calendar.created', entityType: 'calendar_event', entityId: 'cal-8', details: 'Scheduled urgent hearing on asset freeze motion for 5 days from now', userId: 'member-1', timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
+   882→          { id: 'act-10', action: 'team.member_added', entityType: 'team_member', entityId: 'member-5', details: 'Added new team member: Noura Al-Saeed (trainee)', userId: 'lawyer-1', timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+   883→        ],
+   884→      });
+   885→      counts.activities = 10;
+   886→    } catch (e: unknown) {
+   887→      const msg = e instanceof Error ? e.message : String(e);
+   888→      errors.push(`Activities: ${msg}`);
+   889→    }
+   890→
+   891→    // ─── Summary ──────────────────────────────────────────────────
+   892→    const hasErrors = errors.length > 0;
+   893→
+   894→    return NextResponse.json(
+   895→      {
+   896→        success: !hasErrors,
+   897→        message: hasErrors
+   898→          ? 'Seed completed with some errors'
+   899→          : 'Seed completed successfully',
+   900→        counts,
+   901→        errors: hasErrors ? errors : undefined,
+   902→      },
+   903→      { status: hasErrors ? 207 : 200 },
+   904→    );
+   905→  } catch (e: unknown) {
+   906→    const msg = e instanceof Error ? e.message : String(e);
+   907→
+   908→    return NextResponse.json(
+   909→      {
+   910→        success: false,
+   911→        message: 'Seed failed with unexpected error',
+   912→        error: msg,
+   913→        counts,
+   914→      },
+   915→      { status: 500 },
+   916→    );
+   917→  }
+   918→}
