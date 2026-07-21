@@ -24,16 +24,36 @@ model Lawyer {
   name      String
   email     String   @unique
   avatarUrl String?
-  role      String   @default("lawyer") // lawyer | admin | associate
+  role      String   @default("lawyer")
   firm      String?
   licenseNo String?
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  cases    Case[]
-  tasks    Task[]
+  cases      Case[]
+  tasks      Task[]
   activities Activity[]
+  timeEntries TimeEntry[]
+  comments   Comment[]
+}
+
+// ─── Team Members (Firm Staff) ────────────────────────────────
+model TeamMember {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      String   @default("associate") // partner | senior_associate | associate | paralegal | trainee | admin
+  phone     String?
+  avatarUrl String?
+  barNumber String?
+  specialization String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignedTasks TaskAssignment[]
+  comments      Comment[]
 }
 
 // ─── Clients ─────────────────────────────────────────────────
@@ -45,7 +65,7 @@ model Client {
   nationalId  String?
   address     String?
   company     String?
-  type        String   @default("individual") // individual | corporate
+  type        String   @default("individual")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -54,72 +74,240 @@ model Client {
 
 // ─── Cases ───────────────────────────────────────────────────
 model Case {
-  id            String   @id @default(cuid())
-  caseNumber    String   @unique
-  title         String
-  description   String?
-  caseType      String   // civil | criminal | commercial | labor | family | real_estate | other
-  status        String   @default("intake") // intake | active | discovery | trial | settlement | appeal | closed | archived
-  priority      String   @default("medium") // low | medium | high | urgent
-  court         String?
-  judge         String?
-  filedDate     DateTime?
-  nextHearing   DateTime?
-  closedDate    DateTime?
-  value         Float?
-  currency      String   @default("SAR")
-  notes         String?
-  isPro         Boolean  @default(true)
+  id               String   @id @default(cuid())
+  caseNumber       String   @unique
+  title            String
+  description      String?
+  caseType         String
+  status           String   @default("intake")
+  priority         String   @default("medium")
+  court            String?
+  jurisdiction     String?
+  judge            String?
+  opposingCounsel  String?
+  opposingCounselFirm String?
+  filedDate        DateTime?
+  nextHearing      DateTime?
+  statuteLimitDate DateTime?
+  closedDate       DateTime?
+  value            Float?
+  currency         String   @default("SAR")
+  notes            String?
+  isPro            Boolean  @default(true)
   isVisibleToClient Boolean @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  clientAccessConfig String? // JSON: which sections client can see
+  parentId         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   lawyerId  String
   lawyer    Lawyer  @relation(fields: [lawyerId], references: [id])
   clientId  String?
   client    Client? @relation(fields: [clientId], references: [id])
+  parent    Case?   @relation("CaseHierarchy", fields: [parentId], references: [id])
+  children Case[]  @relation("CaseHierarchy")
 
-  tasks      Task[]
-  documents  CaseDocument[]
-  billings   Billing[]
-  timelines  TimelineEvent[]
-  activities Activity[]
+  tasks          Task[]
+  documents      CaseDocument[]
+  billings       Billing[]
+  timelines      TimelineEvent[]
+  activities     Activity[]
+  parties        CaseParty[]
+  comments       Comment[]
+  timeEntries    TimeEntry[]
+  expenses       Expense[]
+  calendarEvents CalendarEvent[]
+  evidenceItems  EvidenceItem[]
+  privilegeLogs  PrivilegeLog[]
 }
 
-// ─── Tasks ───────────────────────────────────────────────────
-model Task {
+// ─── Case Parties ────────────────────────────────────────────
+model CaseParty {
   id          String   @id @default(cuid())
-  title       String
-  description String?
-  status      String   @default("pending") // pending | in_progress | completed | cancelled
-  priority    String   @default("medium") // low | medium | high | urgent
-  dueDate     DateTime?
-  completedAt DateTime?
+  name        String
+  role        String   // plaintiff | defendant | witness | expert | opposing_counsel | judge | third_party
+  type        String   @default("individual") // individual | corporate | government
+  email       String?
+  phone       String?
+  lawyer      String?  // representing lawyer
+  notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  caseId  String
-  case    Case   @relation(fields: [caseId], references: [id])
-  lawyerId String
-  lawyer   Lawyer @relation(fields: [lawyerId], references: [id])
-}
-
-// ─── Case Documents ──────────────────────────────────────────
-model CaseDocument {
-  id          String   @id @default(cuid())
-  fileName    String
-  fileType    String   // pdf | doc | image | other
-  fileSize    Int?
-  filePath    String?
-  category    String   @default("general") // pleading | evidence | correspondence | contract | court_order | other
-  description String?
-  uploadedAt  DateTime @default(now())
 
   caseId String
   case   Case   @relation(fields: [caseId], references: [id])
 }
 
-// ─── Billing / Time Entries ──────────────────────────────────
+// ─── Tasks ───────────────────────────────────────────────────
+model Task {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  status        String   @default("pending")
+  priority      String   @default("medium")
+  dueDate       DateTime?
+  completedAt   DateTime?
+  category      String   @default("general") // research | drafting | filing | review | meeting | court | other
+  estimatedHours Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  caseId  String
+  case    Case   @relation(fields: [caseId], references: [id])
+  lawyerId String
+  lawyer   Lawyer @relation(fields: [lawyerId], references: [id])
+
+  assignments TaskAssignment[]
+}
+
+// ─── Task Assignments (to team members) ──────────────────────
+model TaskAssignment {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+
+  taskId     String
+  task       Task   @relation(fields: [taskId], references: [id])
+  memberId   String
+  member     TeamMember @relation(fields: [memberId], references: [id])
+
+  @@unique([taskId, memberId])
+}
+
+// ─── Comments / Threads ──────────────────────────────────────
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  isInternal Boolean @default(true) // true = internal only, false = visible to client
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  caseId   String
+  case     Case   @relation(fields: [caseId], references: [id])
+  lawyerId String?
+  lawyer   Lawyer? @relation(fields: [lawyerId], references: [id])
+  memberId String?
+  member   TeamMember? @relation(fields: [memberId], references: [id])
+  parentId  String?
+  parent   Comment? @relation("CommentThread", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentThread")
+}
+
+// ─── Case Documents ──────────────────────────────────────────
+model CaseDocument {
+  id           String   @id @default(cuid())
+  fileName     String
+  fileType     String
+  fileSize     Int?
+  filePath     String?
+  folder       String   @default("/")
+  version      Int      @default(1)
+  versionOf    String?  // parent doc ID for versioning
+  tags         String?  // JSON array of tags
+  category     String   @default("general")
+  description  String?
+  isConfidential Boolean @default(false)
+  isVisibleToClient Boolean @default(true)
+  uploadedBy   String?
+  uploadedAt   DateTime @default(now())
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+}
+
+// ─── Time Entries ────────────────────────────────────────────
+model TimeEntry {
+  id          String   @id @default(cuid())
+  description String
+  duration    Float    // in minutes
+  rate        Float?
+  isBillable  Boolean  @default(true)
+  activityType String   @default("research") // research | drafting | review | meeting | court | phone | email | other
+  date        DateTime
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  caseId   String
+  case     Case   @relation(fields: [caseId], references: [id])
+  lawyerId String
+  lawyer   Lawyer @relation(fields: [lawyerId], references: [id])
+}
+
+// ─── Expenses ────────────────────────────────────────────────
+model Expense {
+  id          String   @id @default(cuid())
+  description String
+  amount      Float
+  currency    String   @default("SAR")
+  category    String   @default("travel") // travel | filing | expert | courier | printing | other
+  isBillable  Boolean  @default(true)
+ date        DateTime
+  receiptPath String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+}
+
+// ─── Calendar Events ─────────────────────────────────────────
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  eventType   String   @default("hearing") // hearing | filing | meeting | deadline | trial | deposition | mediation | other
+  startDate   DateTime
+  endDate     DateTime?
+  allDay      Boolean  @default(false)
+  location    String?
+  color       String?
+  reminder    String?  // none | 15min | 30min | 1h | 1d
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  caseId String?
+  case   Case?  @relation(fields: [caseId], references: [id])
+}
+
+// ─── Evidence Items ──────────────────────────────────────────
+model EvidenceItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  itemType    String   @default("document") // document | photo | video | physical | digital | testimony
+  category    String?  // email | contract | financial | communication | expert_report | other
+  dateReceived DateTime?
+  isPrivileged Boolean @default(false)
+  privilegeType String? // attorney_client | work_product | joint_defense | other
+  isConfidential Boolean @default(false)
+  tags        String?  // JSON
+  linkedDocId String?  // link to CaseDocument
+  source      String?  // who provided it
+  chainOfCustody String? // JSON array of custody entries
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+}
+
+// ─── Privilege Logs ──────────────────────────────────────────
+model PrivilegeLog {
+  id            String   @id @default(cuid())
+  documentTitle String
+   privilegeType String   // attorney_client | work_product | joint_defense | settlement | other
+  dateCreated   DateTime?
+  description   String?
+  withheldFrom String?  // opposing party
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+}
+
+// ─── Billing ─────────────────────────────────────────────────
 model Billing {
   id          String   @id @default(cuid())
   description String
@@ -127,7 +315,7 @@ model Billing {
   rate        Float?
   amount      Float
   currency    String   @default("SAR")
-  status      String   @default("draft") // draft | sent | paid | overdue | cancelled
+  status      String   @default("draft")
   invoiceDate DateTime?
   dueDate     DateTime?
   paidDate    DateTime?
@@ -143,7 +331,7 @@ model TimelineEvent {
   id          String   @id @default(cuid())
   title       String
   description String?
-  eventType   String   @default("note") // hearing | filing | deadline | note | status_change | document | payment
+  eventType   String   @default("note")
   eventDate   DateTime
   createdAt   DateTime @default(now())
 
@@ -156,8 +344,10 @@ model Activity {
   id          String   @id @default(cuid())
   action      String
   description String?
-  entity      String   // case | task | document | billing
+  entity      String
   entityId    String?
+  ipAddress   String?
+  userAgent   String?
   createdAt   DateTime @default(now())
 
   lawyerId String

@@ -233,3 +233,55 @@
 - **Loading/empty states** — Skeletons and empty state icons
 - **Animations** — Framer-motion AnimatePresence or staggered entrance
 - **ESLint** — Passes clean with zero errors
+
+---
+
+## Task 2 — Comprehensive API Routes (Parties, Team, Comments, Time, Expenses, Calendar, Evidence, Privilege Logs, Analytics, Audit)
+
+**Status:** ✅ Completed
+
+### Files Created (16 API route files)
+
+1. **`src/app/api/parties/route.ts`** — GET (?caseId=), POST
+2. **`src/app/api/parties/[id]/route.ts`** — PUT, DELETE
+3. **`src/app/api/team/route.ts`** — GET (list with `_count` for tasks/comments), POST (with P2002 unique email handling)
+4. **`src/app/api/team/[id]/route.ts`** — PUT, DELETE
+5. **`src/app/api/comments/route.ts`** — GET (?caseId=, top-level only with nested `replies`), POST (threaded via `parentId`)
+6. **`src/app/api/time-entries/route.ts`** — GET (?caseId=, ?lawyerId=, ?dateFrom=, ?dateTo= with date range), POST
+7. **`src/app/api/time-entries/[id]/route.ts`** — PUT, DELETE
+8. **`src/app/api/expenses/route.ts`** — GET (?caseId=), POST
+9. **`src/app/api/expenses/[id]/route.ts`** — PUT, DELETE
+10. **`src/app/api/calendar/route.ts`** — GET (?month=, ?year=, ?caseId=), includes pseudo-events from case `nextHearing` and `statuteLimitDate`; POST
+11. **`src/app/api/calendar/[id]/route.ts`** — PUT, DELETE
+12. **`src/app/api/evidence/route.ts`** — GET (?caseId=), POST (JSON serialization for `tags` and `chainOfCustody`)
+13. **`src/app/api/evidence/[id]/route.ts`** — PUT, DELETE
+14. **`src/app/api/privilege-logs/route.ts`** — GET (?caseId=), POST
+15. **`src/app/api/analytics/route.ts`** — GET (comprehensive analytics with 5 metric sections)
+16. **`src/app/api/audit/route.ts`** — GET (?entity=, ?entityId=, ?limit=50) with lawyer name included
+
+### Route Patterns
+- All routes follow Next.js 16 App Router conventions with `params: Promise<{ id: string }>` pattern
+- Consistent error handling: try/catch with `console.error`, P2025 → 404, P2002 → 409
+- Includes: `case` relation in all case-bound entities, `lawyer` in time entries, `member` in comments/team
+- All responses use `NextResponse.json()`
+
+### Analytics Endpoint Detail
+Returns comprehensive data in one response:
+- **caseMetrics**: totalCases, activeCases, avgDaysToClose, casesByType, casesByStatus, casesByPriority
+- **financialMetrics**: totalBilled, totalCollected, outstanding, totalExpenses, revenueByMonth (last 12 months), topBilledCases (top 5)
+- **timeMetrics**: totalHoursLogged, billableHours, nonBillableHours, utilizationRate, hoursByActivityType, hoursByLawyer
+- **teamMetrics**: totalMembers, activeCasesPerMember, tasksCompletedByMember
+- **deadlineMetrics**: upcomingDeadlines (30 days), overdueDeadlines, statuteWarnings (60 days)
+
+### Calendar Endpoint Detail
+- GET with month/year filters returns events within that month range
+- Also merges pseudo-events from cases whose `nextHearing` or `statuteLimitDate` falls in the month, marked with `_isCaseDate: true`
+
+### ESLint
+- Passes clean with zero errors
+## Task 3a — Verify app-store.ts has new interfaces and state
+- Reviewed `/home/z/my-project/src/stores/app-store.ts`
+- All 8 new interfaces already present: `PartyItem`, `TeamMemberItem`, `CommentItem`, `TimeEntryItem`, `ExpenseItem`, `CalendarEventItem`, `EvidenceItem`, `PrivilegeLogItem`
+- All new AppState properties and setters already present (parties, teamMembers, comments, timeEntries, expenses, calendarEvents, evidenceItems, privilegeLogs, activeTimer)
+- All store initial state and actions already implemented
+- `bun run lint` — passed cleanly, no errors

@@ -1,0 +1,1353 @@
+     1→import { db } from '../src/lib/db';
+     2→
+     3→async function main() {
+     4→  console.log('🌱 Seeding Wakeely Pro database...\n');
+     5→
+     6→  // ─── Clean existing data (order matters for FK constraints) ──────
+     7→  console.log('🗑️  Cleaning existing data...');
+     8→  await db.activity.deleteMany();
+     9→  await db.timelineEvent.deleteMany();
+    10→  await db.billing.deleteMany();
+    11→  await db.caseDocument.deleteMany();
+    12→  await db.task.deleteMany();
+    13→  await db.case.deleteMany();
+    14→  await db.client.deleteMany();
+    15→  await db.lawyer.deleteMany();
+    16→  await db.featureFlag.deleteMany();
+    17→
+    18→  // ─── 1. Lawyer ────────────────────────────────────────────────────
+    19→  const lawyer = await db.lawyer.create({
+    20→    data: {
+    21→      name: 'عبدالله المحمدي',
+    22→      email: 'abdullah@wakeely.pro',
+    23→      firm: 'المحاماة المتخصصة',
+    24→      role: 'lawyer',
+    25→      licenseNo: 'SA-LAW-2023-00451',
+    26→      phone: '+966501234567',
+    27→    },
+    28→  });
+    29→  console.log(`✅ Lawyer created: ${lawyer.name} (${lawyer.email})`);
+    30→
+    31→  // ─── 2. Clients ───────────────────────────────────────────────────
+    32→  const clients = await Promise.all([
+    33→    db.client.create({
+    34→      data: {
+    35→        fullName: 'محمد بن خالد الراشدي',
+    36→        email: 'mohammed.alrashidi@email.com',
+    37→        phone: '+966551112233',
+    38→        nationalId: '1098765432',
+    39→        address: 'الرياض، حي الملقا، شارع الأمير سلطان',
+    40→        type: 'individual',
+    41→      },
+    42→    }),
+    43→    db.client.create({
+    44→      data: {
+    45→        fullName: 'شركة النور للتجارة',
+    46→        email: 'info@alnoor-trade.com',
+    47→        phone: '+966112345678',
+    48→        address: 'جدة، حي الحمراء، طريق المدينة',
+    49→        company: 'شركة النور للتجارة',
+    50→        type: 'corporate',
+    51→      },
+    52→    }),
+    53→    db.client.create({
+    54→      data: {
+    55→        fullName: 'فاطمة بنت عبدالرحمن القحطاني',
+    56→        email: 'fatima.qahtani@email.com',
+    57→        phone: '+966504445566',
+    58→        nationalId: '1087654321',
+    59→        address: 'الدمام، حي الشاطئ، شارع الملك فهد',
+    60→        type: 'individual',
+    61→      },
+    62→    }),
+    63→    db.client.create({
+    64→      data: {
+    65→        fullName: 'شركة البناء المتقدم المحدودة',
+    66→        email: 'legal@advanced-build.com',
+    67→        phone: '+966133456789',
+    68→        address: 'الرياض، حي العليا، شارع التحلية',
+    69→        company: 'شركة البناء المتقدم المحدودة',
+    70→        type: 'corporate',
+    71→      },
+    72→    }),
+    73→    db.client.create({
+    74→      data: {
+    75→        fullName: 'سلطان بن فهد العتيبي',
+    76→        email: 'sultan.otaybi@email.com',
+    77→        phone: '+966507778899',
+    78→        nationalId: '1076543210',
+    79→        address: 'مكة المكرمة، حي العزيزية',
+    80→        type: 'individual',
+    81→      },
+    82→    }),
+    83→  ]);
+    84→  console.log(`✅ ${clients.length} clients created`);
+    85→
+    86→  // ─── 3. Cases ─────────────────────────────────────────────────────
+    87→  const cases = await Promise.all([
+    88→    // Case 1 - Active Civil
+    89→    db.case.create({
+    90→      data: {
+    91→        caseNumber: 'CIV-2024-001',
+    92→        title: 'نزاع عقاري على أرض في شمال الرياض',
+    93→        description: 'نزاع بين الطرفين حول ملكية أرض زراعية مساحتها 5000 متر مربع في منطقة شمال الرياض. يدعي المدعي حق الملكية بناءً على عقد بيع قديم.',
+    94→        caseType: 'real_estate',
+    95→        status: 'active',
+    96→        priority: 'high',
+    97→        court: 'المحكمة العامة بالرياض',
+    98→        judge: 'القاضي أحمد الشمري',
+    99→        filedDate: new Date('2024-01-15'),
+   100→        nextHearing: new Date('2025-02-10'),
+   101→        value: 2500000,
+   102→        currency: 'SAR',
+   103→        notes: 'يحتاج إلى تحديث مستندات الملكية من البلدية',
+   104→        isPro: true,
+   105→        isVisibleToClient: true,
+   106→        lawyerId: lawyer.id,
+   107→        clientId: clients[0].id,
+   108→      },
+   109→    }),
+   110→    // Case 2 - Active Criminal
+   111→    db.case.create({
+   112→      data: {
+   113→        caseNumber: 'CRM-2024-002',
+   114→        title: 'قضية تزوير مستندات تجارية',
+   115→        description: 'اتهام بالتزوير في مستندات تجارية وتوقيعات مزيفة على عقود بيع. القضية معروضة على النيابة العامة للتحقيق.',
+   116→        caseType: 'criminal',
+   117→        status: 'discovery',
+   118→        priority: 'urgent',
+   119→        court: 'المحكمة الجزائية بالرياض',
+   120→        judge: 'القاضي فيصل الدوسري',
+   121→        filedDate: new Date('2024-02-20'),
+   122→        nextHearing: new Date('2025-01-28'),
+   123→        value: 500000,
+   124→        currency: 'SAR',
+   125→        isPro: true,
+   126→        isVisibleToClient: false,
+   127→        lawyerId: lawyer.id,
+   128→        clientId: clients[1].id,
+   129→      },
+   130→    }),
+   131→    // Case 3 - Active Commercial
+   132→    db.case.create({
+   133→      data: {
+   134→        caseNumber: 'COM-2024-003',
+   135→        title: 'نزاع عقد توريد مواد بناء',
+   136→        description: 'نزاع تجاري بين شركة النور للتجارة ومقاول بشأن عقد توريد مواد بناء. الطرف الأول يطالب بتعويض عن تأخير التسليم.',
+   137→        caseType: 'commercial',
+   138→        status: 'active',
+   139→        priority: 'high',
+   140→        court: 'المحكمة التجارية بالرياض',
+   141→        judge: 'القاضي سعد الحربي',
+   142→        filedDate: new Date('2024-03-10'),
+   143→        nextHearing: new Date('2025-02-15'),
+   144→        value: 1800000,
+   145→        currency: 'SAR',
+   146→        isPro: true,
+   147→        isVisibleToClient: true,
+   148→        lawyerId: lawyer.id,
+   149→        clientId: clients[1].id,
+   150→      },
+   151→    }),
+   152→    // Case 4 - Active Labor
+   153→    db.case.create({
+   154→      data: {
+   155→        caseNumber: 'LAB-2024-004',
+   156→        title: 'دعوى تعويض عن فصل تعسفي',
+   157→        description: 'دعوى مقامة من الموظفة فاطمة القحطاني ضد شركة سابقة للمطالبة بتعويض عن الفصل التعسفي وعدم صرف مستحقات نهاية الخدمة.',
+   158→        caseType: 'labor',
+   159→        status: 'active',
+   160→        priority: 'medium',
+   161→        court: 'محكمة العمل بالدمام',
+   162→        judge: 'القاضي عبدالعزيز المطيري',
+   163→        filedDate: new Date('2024-04-05'),
+   164→        nextHearing: new Date('2025-02-20'),
+   165→        value: 350000,
+   166→        currency: 'SAR',
+   167→        isPro: true,
+   168→        isVisibleToClient: true,
+   169→        lawyerId: lawyer.id,
+   170→        clientId: clients[2].id,
+   171→      },
+   172→    }),
+   173→    // Case 5 - Active Family
+   174→    db.case.create({
+   175→      data: {
+   176→        caseNumber: 'FAM-2024-005',
+   177→        title: 'دعوى حضانة ونفقة أطفال',
+   178→        description: 'دعوى مطالبة بحضانة الأطفال الثلاثة ونفقة شهرية. يتضمن النزاع تحديد مكان إقامة الأطفال وحق الزيارة.',
+   179→        caseType: 'family',
+   180→        status: 'active',
+   181→        priority: 'high',
+   182→        court: 'محكمة الأحوال الشخصية بالرياض',
+   183→        judge: 'القاضي محمد العنزي',
+   184→        filedDate: new Date('2024-03-25'),
+   185→        nextHearing: new Date('2025-02-05'),
+   186→        value: 0,
+   187→        currency: 'SAR',
+   188→        notes: 'قضية حساسة تحتاج تعامل دقيق',
+   189→        isPro: true,
+   190→        isVisibleToClient: true,
+   191→        lawyerId: lawyer.id,
+   192→        clientId: clients[2].id,
+   193→      },
+   194→    }),
+   195→    // Case 6 - Closed Civil
+   196→    db.case.create({
+   197→      data: {
+   198→        caseNumber: 'CIV-2023-006',
+   199→        title: 'قضية تحصيل دين تجاري',
+   200→        description: 'قضية تحصيل دين مستحق لشركة البناء المتقدم من عميل سابق بقيمة 750,000 ريال. تم الحكم لصالح الموكل.',
+   201→        caseType: 'civil',
+   202→        status: 'closed',
+   203→        priority: 'medium',
+   204→        court: 'المحكمة العامة بالرياض',
+   205→        judge: 'القاضي خالد العمري',
+   206→        filedDate: new Date('2023-06-10'),
+   207→        closedDate: new Date('2024-08-15'),
+   208→        value: 750000,
+   209→        currency: 'SAR',
+   210→        isPro: false,
+   211→        isVisibleToClient: true,
+   212→        lawyerId: lawyer.id,
+   213→        clientId: clients[3].id,
+   214→      },
+   215→    }),
+   216→    // Case 7 - Active Commercial
+   217→    db.case.create({
+   218→      data: {
+   219→        caseNumber: 'COM-2024-007',
+   220→        title: 'نزاع شراكة تجارية بين شركاء',
+   221→        description: 'نزاع بين شركاء في شركة تجارية حول توزيع الأرباح وإدارة الشركة. يتم التحضير لعرض الوساطة.',
+   222→        caseType: 'commercial',
+   223→        status: 'settlement',
+   224→        priority: 'high',
+   225→        court: 'مركز الوساطة التجاري بالرياض',
+   226→        judge: 'المُوَسِّط ناصر السبيعي',
+   227→        filedDate: new Date('2024-05-20'),
+   228→        value: 5000000,
+   229→        currency: 'SAR',
+   230→        isPro: true,
+   231→        isVisibleToClient: false,
+   232→        lawyerId: lawyer.id,
+   233→        clientId: clients[3].id,
+   234→      },
+   235→    }),
+   236→    // Case 8 - Active Criminal
+   237→    db.case.create({
+   238→      data: {
+   239→        caseNumber: 'CRM-2024-008',
+   240→        title: 'قضية احتيال إلكتروني',
+   241→        description: 'قضية احتيال عبر منصة إلكترونية حيث تم تحويل مبالغ مالية بطريقة الاحتيال. تم تقديم بلاغ للنيابة العامة.',
+   242→        caseType: 'criminal',
+   243→        status: 'intake',
+   244→        priority: 'urgent',
+   245→        court: 'النيابة العامة - الفرع الإلكتروني',
+   246→        value: 1200000,
+   247→        currency: 'SAR',
+   248→        isPro: true,
+   249→        isVisibleToClient: false,
+   250→        lawyerId: lawyer.id,
+   251→        clientId: clients[4].id,
+   252→      },
+   253→    }),
+   254→    // Case 9 - Closed Labor
+   255→    db.case.create({
+   256→      data: {
+   257→        caseNumber: 'LAB-2023-009',
+   258→        title: 'دعوى مطالبة بمستحقات عمالية',
+   259→        description: 'دعوى لموظف سابق للمطالبة ببدلات سفر ومكافآت نهاية العام غير المصروفة. تم الصلح بين الطرفين.',
+   260→        caseType: 'labor',
+   261→        status: 'closed',
+   262→        priority: 'low',
+   263→        court: 'محكمة العمل بالرياض',
+   264→        judge: 'القاضي عبدالإله الزهراني',
+   265→        filedDate: new Date('2023-09-01'),
+   266→        closedDate: new Date('2024-03-20'),
+   267→        value: 95000,
+   268→        currency: 'SAR',
+   269→        isPro: false,
+   270→        isVisibleToClient: true,
+   271→        lawyerId: lawyer.id,
+   272→        clientId: clients[0].id,
+   273→      },
+   274→    }),
+   275→    // Case 10 - Active Real Estate
+   276→    db.case.create({
+   277→      data: {
+   278→        caseNumber: 'RLE-2024-010',
+   279→        title: 'نزاع عقد إيجار تجاري',
+   280→        description: 'نزاع بين مؤجر ومستأجر حول شروط عقد إيجار محل تجاري. المستأجر يدعي عدم صيانة المبنى والمؤجر يطالب ببدل إيجار متأخر.',
+   281→        caseType: 'real_estate',
+   282→        status: 'active',
+   283→        priority: 'medium',
+   284→        court: 'محكمة التنفيذ بالرياض',
+   285→        judge: 'القاضي بندر الرشيدي',
+   286→        filedDate: new Date('2024-06-15'),
+   287→        nextHearing: new Date('2025-03-01'),
+   288→        value: 420000,
+   289→        currency: 'SAR',
+   290→        isPro: true,
+   291→        isVisibleToClient: true,
+   292→        lawyerId: lawyer.id,
+   293→        clientId: clients[4].id,
+   294→      },
+   295→    }),
+   296→    // Case 11 - Trial Criminal
+   297→    db.case.create({
+   298→      data: {
+   299→        caseNumber: 'CRM-2024-011',
+   300→        title: 'قضية شيكات مرتجعة',
+   301→        description: 'مقاضاة بسبب صدور شيكات بدون رصيد كافٍ. القضية في مرحلة المحاكمة وتم تقديم أدلة الثبوت.',
+   302→        caseType: 'criminal',
+   303→        status: 'trial',
+   304→        priority: 'high',
+   305→        court: 'المحكمة الجزائية بالرياض',
+   306→        judge: 'القاضي فيصل الدوسري',
+   307→        filedDate: new Date('2024-07-01'),
+   308→        nextHearing: new Date('2025-01-30'),
+   309→        value: 380000,
+   310→        currency: 'SAR',
+   311→        isPro: true,
+   312→        isVisibleToClient: true,
+   313→        lawyerId: lawyer.id,
+   314→        clientId: clients[1].id,
+   315→      },
+   316→    }),
+   317→    // Case 12 - Archived Civil
+   318→    db.case.create({
+   319→      data: {
+   320→        caseNumber: 'CIV-2023-012',
+   321→        title: 'دعوى تعويض عن حادث مروري',
+   322→        description: 'دعوى تعويض عن أضرار مادية وجسدية ناتجة عن حادث مروري. تم الحكم بالتعويض وإغلاق القضية.',
+   323→        caseType: 'civil',
+   324→        status: 'archived',
+   325→        priority: 'low',
+   326→        court: 'المحكمة العامة بالرياض',
+   327→        judge: 'القاضي خالد العمري',
+   328→        filedDate: new Date('2023-02-15'),
+   329→        closedDate: new Date('2024-01-10'),
+   330→        value: 200000,
+   331→        currency: 'SAR',
+   332→        isPro: false,
+   333→        isVisibleToClient: true,
+   334→        lawyerId: lawyer.id,
+   335→        clientId: clients[0].id,
+   336→      },
+   337→    }),
+   338→  ]);
+   339→  console.log(`✅ ${cases.length} cases created`);
+   340→
+   341→  // ─── 4. Tasks ─────────────────────────────────────────────────────
+   342→  const tasks = await Promise.all([
+   343→    // Case 1 tasks
+   344→    db.task.create({
+   345→      data: {
+   346→        title: 'تحضير مذكرة دفاع أولية',
+   347→        description: 'إعداد مذكرة الدفاع حول ملكية الأرض مع إرفاق كافة المستندات المؤيدة',
+   348→        status: 'in_progress',
+   349→        priority: 'high',
+   350→        dueDate: new Date('2025-01-25'),
+   351→        caseId: cases[0].id,
+   352→        lawyerId: lawyer.id,
+   353→      },
+   354→    }),
+   355→    db.task.create({
+   356→      data: {
+   357→        title: 'جلب مستندات البلدية',
+   358→        description: 'استخراج صورة من مخطط الأرض وشهادة الملكية من أمانة الرياض',
+   359→        status: 'pending',
+   360→        priority: 'medium',
+   361→        dueDate: new Date('2025-01-20'),
+   362→        caseId: cases[0].id,
+   363→        lawyerId: lawyer.id,
+   364→      },
+   365→    }),
+   366→    db.task.create({
+   367→      data: {
+   368→        title: 'مقابلة الشهود',
+   369→        description: 'تحديد مواعيد لمقابلة شهود الإثبات وتدوين أقوالهم',
+   370→        status: 'pending',
+   371→        priority: 'high',
+   372→        dueDate: new Date('2025-02-01'),
+   373→        caseId: cases[0].id,
+   374→        lawyerId: lawyer.id,
+   375→      },
+   376→    }),
+   377→    // Case 2 tasks
+   378→    db.task.create({
+   379→      data: {
+   380→        title: 'مراجعة تقرير الخبير الجنائي',
+   381→        description: 'دراسة تقرير التزوير المقدم من الإدارة العامة للمختبرات الجنائية',
+   382→        status: 'completed',
+   383→        priority: 'urgent',
+   384→        dueDate: new Date('2024-12-15'),
+   385→        completedAt: new Date('2024-12-14'),
+   386→        caseId: cases[1].id,
+   387→        lawyerId: lawyer.id,
+   388→      },
+   389→    }),
+   390→    db.task.create({
+   391→      data: {
+   392→        title: 'تحضير أسئلة للنيابة العامة',
+   393→        description: 'إعداد قائمة أسئلة للتحقيق مع المتهم في النيابة العامة',
+   394→        status: 'in_progress',
+   395→        priority: 'urgent',
+   396→        dueDate: new Date('2025-01-27'),
+   397→        caseId: cases[1].id,
+   398→        lawyerId: lawyer.id,
+   399→      },
+   400→    }),
+   401→    // Case 3 tasks
+   402→    db.task.create({
+   403→      data: {
+   404→        title: 'تدقيق عقد التوريد',
+   405→        description: 'مراجعة كافة بنود عقد التوريد وتحديد مخالفات الطرف الثاني',
+   406→        status: 'completed',
+   407→        priority: 'high',
+   408→        dueDate: new Date('2024-10-01'),
+   409→        completedAt: new Date('2024-09-28'),
+   410→        caseId: cases[2].id,
+   411→        lawyerId: lawyer.id,
+   412→      },
+   413→    }),
+   414→    db.task.create({
+   415→      data: {
+   416→        title: 'حساب قيمة التعويض المطلوب',
+   417→        description: 'حساب الخسائر الفعلية والتعويض عن الأضرار المباشرة وغير المباشرة',
+   418→        status: 'in_progress',
+   419→        priority: 'medium',
+   420→        dueDate: new Date('2025-02-10'),
+   421→        caseId: cases[2].id,
+   422→        lawyerId: lawyer.id,
+   423→      },
+   424→    }),
+   425→    // Case 4 tasks
+   426→    db.task.create({
+   427→      data: {
+   428→        title: 'جمع كشوف المرتبات',
+   429→        description: 'الحصول على كشوف المرتبات الشهرية للموظفة من الشركة المدعى عليها',
+   430→        status: 'completed',
+   431→        priority: 'medium',
+   432→        dueDate: new Date('2024-11-01'),
+   433→        completedAt: new Date('2024-10-30'),
+   434→        caseId: cases[3].id,
+   435→        lawyerId: lawyer.id,
+   436→      },
+   437→    }),
+   438→    db.task.create({
+   439→      data: {
+   440→        title: 'تحضير طلب صندوق تنمية الموارد البشرية',
+   441→        description: 'تقديم طلب للحصول على بيانات من صندوق تنمية الموارد البشرية (هدف)',
+   442→        status: 'pending',
+   443→        priority: 'medium',
+   444→        dueDate: new Date('2025-02-15'),
+   445→        caseId: cases[3].id,
+   446→        lawyerId: lawyer.id,
+   447→      },
+   448→    }),
+   449→    // Case 5 tasks
+   450→    db.task.create({
+   451→      data: {
+   452→        title: 'إعداد قائمة بحاجات الأطفال',
+   453→        description: 'توثيق كافة احتياجات الأطفال المادية والمعنوية لتقديمها للمحكمة',
+   454→        status: 'in_progress',
+   455→        priority: 'high',
+   456→        dueDate: new Date('2025-02-03'),
+   457→        caseId: cases[4].id,
+   458→        lawyerId: lawyer.id,
+   459→      },
+   460→    }),
+   461→    db.task.create({
+   462→      data: {
+   463→        title: 'تعيين محامي للأطفال',
+   464→        description: 'تقديم طلب لتعيين محامي خاص يمثل مصالح الأطفال في القضية',
+   465→        status: 'pending',
+   466→        priority: 'high',
+   467→        dueDate: new Date('2025-01-30'),
+   468→        caseId: cases[4].id,
+   469→        lawyerId: lawyer.id,
+   470→      },
+   471→    }),
+   472→    // Case 7 tasks
+   473→    db.task.create({
+   474→      data: {
+   475→        title: 'تجهيز ملف الوساطة',
+   476→        description: 'إعداد ملخص النزاع ووثائق الشراكة لتقديمها لمركز الوساطة',
+   477→        status: 'in_progress',
+   478→        priority: 'high',
+   479→        dueDate: new Date('2025-02-12'),
+   480→        caseId: cases[6].id,
+   481→        lawyerId: lawyer.id,
+   482→      },
+   483→    }),
+   484→    db.task.create({
+   485→      data: {
+   486→        title: 'حساب حصص الأرباح',
+   487→        description: 'مراجعة السجلات المالية للشركة وحساب حصة كل شريك من الأرباح',
+   488→        status: 'pending',
+   489→        priority: 'medium',
+   490→        dueDate: new Date('2025-02-18'),
+   491→        caseId: cases[6].id,
+   492→        lawyerId: lawyer.id,
+   493→      },
+   494→    }),
+   495→    // Case 8 tasks
+   496→    db.task.create({
+   497→      data: {
+   498→        title: 'تقديم بلاغ للنيابة العامة',
+   499→        description: 'إعداد وتقديم بلاغ رسمي للنيابة العامة مع إرفاق الأدلة الرقمية',
+   500→        status: 'completed',
+   501→        priority: 'urgent',
+   502→        dueDate: new Date('2024-08-01'),
+   503→        completedAt: new Date('2024-07-28'),
+   504→        caseId: cases[7].id,
+   505→        lawyerId: lawyer.id,
+   506→      },
+   507→    }),
+   508→    db.task.create({
+   509→      data: {
+   510→        title: 'جمع الأدلة الرقمية',
+   511→        description: 'التنسيق مع فريق الأمن السيبراني لجمع وتأمين الأدلة الإلكترونية',
+   512→        status: 'in_progress',
+   513→        priority: 'urgent',
+   514→        dueDate: new Date('2025-02-05'),
+   515→        caseId: cases[7].id,
+   516→        lawyerId: lawyer.id,
+   517→      },
+   518→    }),
+   519→    // Case 10 tasks
+   520→    db.task.create({
+   521→      data: {
+   522→        title: 'مراجعة عقد الإيجار',
+   523→        description: 'تحليل بنود عقد الإيجار وتحديد الالتزامات المترتبة على كل طرف',
+   524→        status: 'completed',
+   525→        priority: 'medium',
+   526→        dueDate: new Date('2024-11-15'),
+   527→        completedAt: new Date('2024-11-12'),
+   528→        caseId: cases[9].id,
+   529→        lawyerId: lawyer.id,
+   530→      },
+   531→    }),
+   532→    db.task.create({
+   533→      data: {
+   534→        title: 'تقرير خبير عقاري',
+   535→        description: 'طلب تعيين خبير عقاري لتقييم حالة المبنى وتحديد تكاليف الصيانة',
+   536→        status: 'pending',
+   537→        priority: 'medium',
+   538→        dueDate: new Date('2025-02-25'),
+   539→        caseId: cases[9].id,
+   540→        lawyerId: lawyer.id,
+   541→      },
+   542→    }),
+   543→    // Case 11 tasks
+   544→    db.task.create({
+   545→      data: {
+   546→        title: 'إعداد مذكرة الرد على الادعاء',
+   547→        description: 'تحضير مذكرة قانونية للرد على ادعاءات المدعي العام في قضية الشيكات',
+   548→        status: 'in_progress',
+   549→        priority: 'high',
+   550→        dueDate: new Date('2025-01-28'),
+   551→        caseId: cases[10].id,
+   552→        lawyerId: lawyer.id,
+   553→      },
+   554→    }),
+   555→    // Case 4 extra task
+   556→    db.task.create({
+   557→      data: {
+   558→        title: 'توثيق شهادات الزملاء السابقين',
+   559→        description: 'جمع شهادات من زملاء العمل السابقين حول ظروف الفصل',
+   560→        status: 'pending',
+   561→        priority: 'low',
+   562→        dueDate: new Date('2025-03-01'),
+   563→        caseId: cases[3].id,
+   564→        lawyerId: lawyer.id,
+   565→      },
+   566→    }),
+   567→    // Case 5 extra task
+   568→    db.task.create({
+   569→      data: {
+   570→        title: 'تقديم طلب نفقة مؤقتة',
+   571→        description: 'إعداد وتقديم طلب للنفقة المؤقتة ريثما يتم البت في القضية',
+   572→        status: 'completed',
+   573→        priority: 'high',
+   574→        dueDate: new Date('2024-06-01'),
+   575→        completedAt: new Date('2024-05-29'),
+   576→        caseId: cases[4].id,
+   577→        lawyerId: lawyer.id,
+   578→      },
+   579→    }),
+   580→    // Case 1 extra task
+   581→    db.task.create({
+   582→      data: {
+   583→        title: 'طلب إفادة من السجل العقاري',
+   584→        description: 'الحصول على تقرير شامل من السجل العقاري حول تاريخ ملكية الأرض',
+   585→        status: 'in_progress',
+   586→        priority: 'medium',
+   587→        dueDate: new Date('2025-01-22'),
+   588→        caseId: cases[0].id,
+   589→        lawyerId: lawyer.id,
+   590→      },
+   591→    }),
+   592→    // Case 7 extra task
+   593→    db.task.create({
+   594→      data: {
+   595→        title: 'مراجعة عقد الشركة الأساسي',
+   596→        description: 'دراسة عقد التأسيس واللوائح الداخلية للشركة المتنازع عليها',
+   597→        status: 'completed',
+   598→        priority: 'high',
+   599→        dueDate: new Date('2024-09-15'),
+   600→        completedAt: new Date('2024-09-10'),
+   601→        caseId: cases[6].id,
+   602→        lawyerId: lawyer.id,
+   603→      },
+   604→    }),
+   605→    // Case 2 extra task
+   606→    db.task.create({
+   607→      data: {
+   608→        title: 'تعيين خبير خطوط',
+   609→        description: 'تقديم طلب للمحكمة لتعيين خبير خطوط لفحص التوقيعات المزيفة',
+   610→        status: 'pending',
+   611→        priority: 'high',
+   612→        dueDate: new Date('2025-02-08'),
+   613→        caseId: cases[1].id,
+   614→        lawyerId: lawyer.id,
+   615→      },
+   616→    }),
+   617→    // Case 8 extra task
+   618→    db.task.create({
+   619→      data: {
+   620→        title: 'توثيق التحويلات البنكية',
+   621→        description: 'جلب كشوف الحسابات البنكية وإثبات التحويلات المشبوهة',
+   622→        status: 'pending',
+   623→        priority: 'high',
+   624→        dueDate: new Date('2025-02-10'),
+   625→        caseId: cases[7].id,
+   626→        lawyerId: lawyer.id,
+   627→      },
+   628→    }),
+   629→    // Extra task for Case 8 - follow up
+   630→    db.task.create({
+   631→      data: {
+   632→        title: 'متابعة تحويلات البنك',
+   633→        description: 'متابعة مديرية التحقيقات الجنائية بشأن تحويلات الأموال المشبوهة',
+   634→        status: 'pending',
+   635→        priority: 'urgent',
+   636→        dueDate: new Date('2025-02-12'),
+   637→        caseId: cases[7].id,
+   638→        lawyerId: lawyer.id,
+   639→      },
+   640→    }),
+   641→  ]);
+   642→  console.log(`✅ ${tasks.length} tasks created`);
+   643→
+   644→  // ─── 5. Documents ────────────────────────────────────────────────
+   645→  const documents = await Promise.all([
+   646→    db.caseDocument.create({
+   647→      data: {
+   648→        fileName: 'عقد_بيع_الأرض.pdf',
+   649→        fileType: 'pdf',
+   650→        fileSize: 2048000,
+   651→        category: 'contract',
+   652→        description: 'عقد بيع الأرض الموضوع النزاع عليه',
+   653→        uploadedAt: new Date('2024-01-20'),
+   654→        caseId: cases[0].id,
+   655→      },
+   656→    }),
+   657→    db.caseDocument.create({
+   658→      data: {
+   659→        fileName: 'صك_الملكية.pdf',
+   660→        fileType: 'pdf',
+   661→        fileSize: 1536000,
+   662→        category: 'evidence',
+   663→        description: 'صك الملكية المسجل في السجل العقاري',
+   664→        uploadedAt: new Date('2024-01-20'),
+   665→        caseId: cases[0].id,
+   666→      },
+   667→    }),
+   668→    db.caseDocument.create({
+   669→      data: {
+   670→        fileName: 'تقرير_الخبير_الجنائي.pdf',
+   671→        fileType: 'pdf',
+   672→        fileSize: 3072000,
+   673→        category: 'evidence',
+   674→        description: 'تقرير فحص التزوير من المختبرات الجنائية',
+   675→        uploadedAt: new Date('2024-12-10'),
+   676→        caseId: cases[1].id,
+   677→      },
+   678→    }),
+   679→    db.caseDocument.create({
+   680→      data: {
+   681→        fileName: 'عقد_التوريد.pdf',
+   682→        fileType: 'pdf',
+   683→        fileSize: 1280000,
+   684→        category: 'contract',
+   685→        description: 'عقد توريد مواد البناء بين الطرفين',
+   686→        uploadedAt: new Date('2024-03-15'),
+   687→        caseId: cases[2].id,
+   688→      },
+   689→    }),
+   690→    db.caseDocument.create({
+   691→      data: {
+   692→        fileName: 'كشوف_المرتبات.xlsx',
+   693→        fileType: 'other',
+   694→        fileSize: 512000,
+   695→        category: 'evidence',
+   696→        description: 'كشوف المرتبات الشهرية للموظفة',
+   697→        uploadedAt: new Date('2024-10-28'),
+   698→        caseId: cases[3].id,
+   699→      },
+   700→    }),
+   701→    db.caseDocument.create({
+   702→      data: {
+   703→        fileName: 'عقد_الزواج.pdf',
+   704→        fileType: 'pdf',
+   705→        fileSize: 768000,
+   706→        category: 'contract',
+   707→        description: 'عقد الزواج ووثيقة الطلاق',
+   708→        uploadedAt: new Date('2024-03-28'),
+   709→        caseId: cases[4].id,
+   710→      },
+   711→    }),
+   712→    db.caseDocument.create({
+   713→      data: {
+   714→        fileName: 'صك_الشراكة.pdf',
+   715→        fileType: 'pdf',
+   716→        fileSize: 2048000,
+   717→        category: 'contract',
+   718→        description: 'عقد تأسيس الشركة ووثيقة الشراكة',
+   719→        uploadedAt: new Date('2024-05-25'),
+   720→        caseId: cases[6].id,
+   721→      },
+   722→    }),
+   723→    db.caseDocument.create({
+   724→      data: {
+   725→        fileName: 'البلاغ_الرسمي.pdf',
+   726→        fileType: 'pdf',
+   727→        fileSize: 896000,
+   728→        category: 'pleading',
+   729→        description: 'بلاغ رسمي مقدم للنيابة العامة في قضية الاحتيال',
+   730→        uploadedAt: new Date('2024-07-25'),
+   731→        caseId: cases[7].id,
+   732→      },
+   733→    }),
+   734→    db.caseDocument.create({
+   735→      data: {
+   736→        fileName: 'عقد_الإيجار_التجاري.pdf',
+   737→        fileType: 'pdf',
+   738→        fileSize: 640000,
+   739→        category: 'contract',
+   740→        description: 'عقد إيجار المحل التجاري محل النزاع',
+   741→        uploadedAt: new Date('2024-06-20'),
+   742→        caseId: cases[9].id,
+   743→      },
+   744→    }),
+   745→    db.caseDocument.create({
+   746→      data: {
+   747→        fileName: 'الشيكات_المرتجعة.pdf',
+   748→        fileType: 'pdf',
+   749→        fileSize: 1152000,
+   750→        category: 'evidence',
+   751→        description: 'صور الشيكات المرتجعة من البنك',
+   752→        uploadedAt: new Date('2024-07-10'),
+   753→        caseId: cases[10].id,
+   754→      },
+   755→    }),
+   756→    db.caseDocument.create({
+   757→      data: {
+   758→        fileName: 'مذكرة_الدفاع_الأولية.docx',
+   759→        fileType: 'doc',
+   760→        fileSize: 256000,
+   761→        category: 'pleading',
+   762→        description: 'مذكرة الدفاع المقدمة في قضية الشيكات',
+   763→        uploadedAt: new Date('2024-08-05'),
+   764→        caseId: cases[10].id,
+   765→      },
+   766→    }),
+   767→    db.caseDocument.create({
+   768→      data: {
+   769→        fileName: 'تقرير_الخبير_العقاري.pdf',
+   770→        fileType: 'pdf',
+   771→        fileSize: 4096000,
+   772→        category: 'evidence',
+   773→        description: 'تقرير التقييم العقاري للأرض المتنازع عليها',
+   774→        uploadedAt: new Date('2024-02-01'),
+   775→        caseId: cases[0].id,
+   776→      },
+   777→    }),
+   778→    db.caseDocument.create({
+   779→      data: {
+   780→        fileName: 'محضر_الجلسة_2024-12.pdf',
+   781→        fileType: 'pdf',
+   782→        fileSize: 384000,
+   783→        category: 'court_order',
+   784→        description: 'محضر جلسة المحكمة بتاريخ 2024/12/15',
+   785→        uploadedAt: new Date('2024-12-16'),
+   786→        caseId: cases[1].id,
+   787→      },
+   788→    }),
+   789→    db.caseDocument.create({
+   790→      data: {
+   791→        fileName: 'طلب_النفقة_المؤقتة.pdf',
+   792→        fileType: 'pdf',
+   793→        fileSize: 320000,
+   794→        category: 'pleading',
+   795→        description: 'طلب تقديم نفقة مؤقتة للأطفال',
+   796→        uploadedAt: new Date('2024-05-28'),
+   797→        caseId: cases[4].id,
+   798→      },
+   799→    }),
+   800→    db.caseDocument.create({
+   801→      data: {
+   802→        fileName: 'كشوف_التحويلات_البنكية.pdf',
+   803→        fileType: 'pdf',
+   804→        fileSize: 1792000,
+   805→        category: 'evidence',
+   806→        description: 'كشوف الحسابات البنكية showing suspicious transfers',
+   807→        uploadedAt: new Date('2024-08-15'),
+   808→        caseId: cases[7].id,
+   809→      },
+   810→    }),
+   811→  ]);
+   812→  console.log(`✅ ${documents.length} documents created`);
+   813→
+   814→  // ─── 6. Billing ──────────────────────────────────────────────────
+   815→  const billings = await Promise.all([
+   816→    db.billing.create({
+   817→      data: {
+   818→        description: 'أتعاب دراسة ملف القضية العقارية وتحضير اللائحة الأولية',
+   819→        hours: 12,
+   820→        rate: 1500,
+   821→        amount: 18000,
+   822→        currency: 'SAR',
+   823→        status: 'paid',
+   824→        invoiceDate: new Date('2024-02-01'),
+   825→        dueDate: new Date('2024-03-01'),
+   826→        paidDate: new Date('2024-02-25'),
+   827→        caseId: cases[0].id,
+   828→      },
+   829→    }),
+   830→    db.billing.create({
+   831→      data: {
+   832→        description: 'أتعاب تمثيل أمام النيابة العامة - جلسة التحقيق',
+   833→        hours: 6,
+   834→        rate: 2000,
+   835→        amount: 12000,
+   836→        currency: 'SAR',
+   837→        status: 'sent',
+   838→        invoiceDate: new Date('2024-12-20'),
+   839→        dueDate: new Date('2025-01-20'),
+   840→        caseId: cases[1].id,
+   841→      },
+   842→    }),
+   843→    db.billing.create({
+   844→      data: {
+   845→        description: 'أتعاب تدقيق عقد التوريد وإعداد مذكرة الدعوى',
+   846→        hours: 18,
+   847→        rate: 1500,
+   848→        amount: 27000,
+   849→        currency: 'SAR',
+   850→        status: 'paid',
+   851→        invoiceDate: new Date('2024-04-01'),
+   852→        dueDate: new Date('2024-05-01'),
+   853→        paidDate: new Date('2024-04-20'),
+   854→        caseId: cases[2].id,
+   855→      },
+   856→    }),
+   857→    db.billing.create({
+   858→      data: {
+   859→        description: 'أتعاب إعداد دعوى الفصل التعسفي وجمع المستندات',
+   860→        hours: 10,
+   861→        rate: 1200,
+   862→        amount: 12000,
+   863→        currency: 'SAR',
+   864→        status: 'sent',
+   865→        invoiceDate: new Date('2024-11-01'),
+   866→        dueDate: new Date('2024-12-01'),
+   867→        caseId: cases[3].id,
+   868→      },
+   869→    }),
+   870→    db.billing.create({
+   871→      data: {
+   872→        description: 'مصاريف محكمة ورسوم قضائية - قضية الحضانة',
+   873→        amount: 3500,
+   874→        currency: 'SAR',
+   875→        status: 'paid',
+   876→        invoiceDate: new Date('2024-04-01'),
+   877→        dueDate: new Date('2024-04-15'),
+   878→        paidDate: new Date('2024-04-10'),
+   879→        caseId: cases[4].id,
+   880→      },
+   881→    }),
+   882→    db.billing.create({
+   883→      data: {
+   884→        description: 'أتعاب إدارة ملف الوساطة وجلسات التفاوض',
+   885→        hours: 15,
+   886→        rate: 1800,
+   887→        amount: 27000,
+   888→        currency: 'SAR',
+   889→        status: 'draft',
+   890→        caseId: cases[6].id,
+   891→      },
+   892→    }),
+   893→    db.billing.create({
+   894→      data: {
+   895→        description: 'أتعاب تقديم البلاغ وجمع الأدلة الرقمية',
+   896→        hours: 20,
+   897→        rate: 2000,
+   898→        amount: 40000,
+   899→        currency: 'SAR',
+   900→        status: 'sent',
+   901→        invoiceDate: new Date('2024-08-10'),
+   902→        dueDate: new Date('2024-09-10'),
+   903→        caseId: cases[7].id,
+   904→      },
+   905→    }),
+   906→    db.billing.create({
+   907→      data: {
+   908→        description: 'أتعاب المرافعة في قضية الشيكات المرتجعة',
+   909→        hours: 8,
+   910→        rate: 2000,
+   911→        amount: 16000,
+   912→        currency: 'SAR',
+   913→        status: 'overdue',
+   914→        invoiceDate: new Date('2024-09-01'),
+   915→        dueDate: new Date('2024-10-01'),
+   916→        caseId: cases[10].id,
+   917→      },
+   918→    }),
+   919→    db.billing.create({
+   920→      data: {
+   921→        description: 'أتعاب تحضير مذكرة الدفاع - قضية التحصيل',
+   922→        hours: 14,
+   923→        rate: 1200,
+   924→        amount: 16800,
+   925→        currency: 'SAR',
+   926→        status: 'paid',
+   927→        invoiceDate: new Date('2023-07-01'),
+   928→        dueDate: new Date('2023-08-01'),
+   929→        paidDate: new Date('2023-07-25'),
+   930→        caseId: cases[5].id,
+   931→      },
+   932→    }),
+   933→    db.billing.create({
+   934→      data: {
+   935→        description: 'رسوم طلب تعيين خبير عقاري ومصاريف محكمة',
+   936→        amount: 5000,
+   937→        currency: 'SAR',
+   938→        status: 'draft',
+   939→        caseId: cases[9].id,
+   940→      },
+   941→    }),
+   942→  ]);
+   943→  console.log(`✅ ${billings.length} billing entries created`);
+   944→
+   945→  // ─── 7. Timeline Events ──────────────────────────────────────────
+   946→  const timelineEvents = await Promise.all([
+   947→    db.timelineEvent.create({
+   948→      data: {
+   949→        title: 'تقديم الدعوى',
+   950→        description: 'تم تقديم صحيفة الدعوى إلى المحكمة العامة بالرياض',
+   951→        eventType: 'filing',
+   952→        eventDate: new Date('2024-01-15'),
+   953→        caseId: cases[0].id,
+   954→      },
+   955→    }),
+   956→    db.timelineEvent.create({
+   957→      data: {
+   958→        title: 'أول جلسة محاكمة',
+   959→        description: 'عُقدت الجلسة الأولى وتم تأجيل القضية لجلب المستندات',
+   960→        eventType: 'hearing',
+   961→        eventDate: new Date('2024-02-20'),
+   962→        caseId: cases[0].id,
+   963→      },
+   964→    }),
+   965→    db.timelineEvent.create({
+   966→      data: {
+   967→        title: 'تقديم بلاغ للنيابة',
+   968→        description: 'تم تقديم بلاغ رسمي للنيابة العامة في قضية التزوير',
+   969→        eventType: 'filing',
+   970→        eventDate: new Date('2024-02-25'),
+   971→        caseId: cases[1].id,
+   972→      },
+   973→    }),
+   974→    db.timelineEvent.create({
+   975→      data: {
+   976→        title: 'تحويل القضية للتحقيق',
+   977→        description: 'تم تحويل القضية من النيابة العامة لبدء التحقيق',
+   978→        eventType: 'status_change',
+   979→        eventDate: new Date('2024-04-01'),
+   980→        caseId: cases[1].id,
+   981→      },
+   982→    }),
+   983→    db.timelineEvent.create({
+   984→      data: {
+   985→        title: 'تقديم دعوى تجارية',
+   986→        description: 'تم رفع دعوى تعويض عن الإخلال بعقد التوريد',
+   987→        eventType: 'filing',
+   988→        eventDate: new Date('2024-03-10'),
+   989→        caseId: cases[2].id,
+   990→      },
+   991→    }),
+   992→    db.timelineEvent.create({
+   993→      data: {
+   994→        title: 'موعد نهائي لتقديم الأدلة',
+   995→        description: 'آخر موعد لتقديم المستندات والادلة المؤيدة للدعوى',
+   996→        eventType: 'deadline',
+   997→        eventDate: new Date('2025-02-01'),
+   998→        caseId: cases[2].id,
+   999→      },
+  1000→    }),
+  1001→    db.timelineEvent.create({
+  1002→      data: {
+  1003→        title: 'صدور حكم المحكمة',
+  1004→        description: 'حكمت المحكمة لصالح الموكل بمبلغ 750,000 ريال',
+  1005→        eventType: 'status_change',
+  1006→        eventDate: new Date('2024-08-15'),
+  1007→        caseId: cases[5].id,
+  1008→      },
+  1009→    }),
+  1010→    db.timelineEvent.create({
+  1011→      data: {
+  1012→        title: 'بدء جلسات الوساطة',
+  1013→        description: 'عُقدت أول جلسة وساطة بين شركاء الشركة المتنازعين',
+  1014→        eventType: 'hearing',
+  1015→        eventDate: new Date('2024-08-15'),
+  1016→        caseId: cases[6].id,
+  1017→      },
+  1018→    }),
+  1019→    db.timelineEvent.create({
+  1020→      data: {
+  1021→        title: 'إيداع مبلغ التأمين',
+  1022→        description: 'تم إيداع مبلغ التأمين القضائي في حساب المحكمة',
+  1023→        eventType: 'payment',
+  1024→        eventDate: new Date('2024-03-20'),
+  1025→        caseId: cases[4].id,
+  1026→      },
+  1027→    }),
+  1028→    db.timelineEvent.create({
+  1029→      data: {
+  1030→        title: 'صدور أمر المحكمة بالحضانة المؤقتة',
+  1031→        description: 'أصدرت المحكمة أولاً بحضانة الأم مع نفقة شهرية',
+  1032→        eventType: 'document',
+  1033→        eventDate: new Date('2024-06-15'),
+  1034→        caseId: cases[4].id,
+  1035→      },
+  1036→    }),
+  1037→    db.timelineEvent.create({
+  1038→      data: {
+  1039→        title: 'رفع دعوى عمالية',
+  1040→        description: 'تم تقديم الدعوى لمحكمة العمل بالدمام',
+  1041→        eventType: 'filing',
+  1042→        eventDate: new Date('2024-04-05'),
+  1043→        caseId: cases[3].id,
+  1044→      },
+  1045→    }),
+  1046→    db.timelineEvent.create({
+  1047→      data: {
+  1048→        title: 'تقديم الأدلة الرقمية',
+  1049→        description: 'تم تقديم الأدلة الإلكترونية المجمعة للنيابة العامة',
+  1050→        eventType: 'document',
+  1051→        eventDate: new Date('2024-09-01'),
+  1052→        caseId: cases[7].id,
+  1053→      },
+  1054→    }),
+  1055→    db.timelineEvent.create({
+  1056→      data: {
+  1057→        title: 'جلسة المرافعة',
+  1058→        description: 'جلسة مرافعة في قضية الشيكات المرتجعة - تقديم الدفاع',
+  1059→        eventType: 'hearing',
+  1060→        eventDate: new Date('2024-10-15'),
+  1061→        caseId: cases[10].id,
+  1062→      },
+  1063→    }),
+  1064→    db.timelineEvent.create({
+  1065→      data: {
+  1066→        title: 'تسوية ودية',
+  1067→        description: 'تم التوصل إلى تسوية ودية بين الطرفين بقيمة متفق عليها',
+  1068→        eventType: 'status_change',
+  1069→        eventDate: new Date('2024-03-15'),
+  1070→        caseId: cases[8].id,
+  1071→      },
+  1072→    }),
+  1073→    db.timelineEvent.create({
+  1074→      data: {
+  1075→        title: 'تقديم تقرير الخبير العقاري',
+  1076→        description: 'تم تقديم تقرير تقييم الأرض من مكتب الخبراء المعتمد',
+  1077→        eventType: 'document',
+  1078→        eventDate: new Date('2024-12-01'),
+  1079→        caseId: cases[0].id,
+  1080→      },
+  1081→    }),
+  1082→    db.timelineEvent.create({
+  1083→      data: {
+  1084→        title: 'إشعار الجلسة القادمة',
+  1085→        description: 'تم تلقي إشعار بموعد الجلسة القادمة في قضية الإيجار',
+  1086→        eventType: 'hearing',
+  1087→        eventDate: new Date('2025-01-15'),
+  1088→        caseId: cases[9].id,
+  1089→      },
+  1090→    }),
+  1091→    db.timelineEvent.create({
+  1092→      data: {
+  1093→        title: 'تحصيل مبلغ الحكم',
+  1094→        description: 'تم تحصيل مبلغ الحكم كاملاً من المحكوم عليه',
+  1095→        eventType: 'payment',
+  1096→        eventDate: new Date('2024-09-01'),
+  1097→        caseId: cases[5].id,
+  1098→      },
+  1099→    }),
+  1100→    db.timelineEvent.create({
+  1101→      data: {
+  1102→        title: 'تقديم مذكمة دفع بعدم الاختصاص',
+  1103→        description: 'تم تقديم مذكرة دفع بعدم اختصاص المحكمة بنظر النزاع',
+  1104→        eventType: 'filing',
+  1105→        eventDate: new Date('2024-07-10'),
+  1106→        caseId: cases[10].id,
+  1107→      },
+  1108→    }),
+  1109→    db.timelineEvent.create({
+  1110→      data: {
+  1111→        title: 'موعد نهائي للرد',
+  1112→        description: 'آخر موعد لتقديم الرد على مذكرة المدعي',
+  1113→        eventType: 'deadline',
+  1114→        eventDate: new Date('2025-01-25'),
+  1115→        caseId: cases[1].id,
+  1116→      },
+  1117→    }),
+  1118→    db.timelineEvent.create({
+  1119→      data: {
+  1120→        title: 'تقرير الصلح والصلح المالي',
+  1121→        description: 'تم إنهاء القضية بالصلح وتم صرف مستحقات الموظف',
+  1122→        eventType: 'payment',
+  1123→        eventDate: new Date('2024-03-20'),
+  1124→        caseId: cases[8].id,
+  1125→      },
+  1126→    }),
+  1127→  ]);
+  1128→  console.log(`✅ ${timelineEvents.length} timeline events created`);
+  1129→
+  1130→  // ─── 8. Activity Log ─────────────────────────────────────────────
+  1131→  const activities = await Promise.all([
+  1132→    db.activity.create({
+  1133→      data: {
+  1134→        action: 'case_created',
+  1135→        description: 'تم إنشاء قضية نزاع عقاري جديدة',
+  1136→        entity: 'case',
+  1137→        entityId: cases[0].id,
+  1138→        lawyerId: lawyer.id,
+  1139→        caseId: cases[0].id,
+  1140→      },
+  1141→    }),
+  1142→    db.activity.create({
+  1143→      data: {
+  1144→        action: 'document_uploaded',
+  1145→        description: 'تم رفع عقد بيع الأرض',
+  1146→        entity: 'document',
+  1147→        entityId: documents[0].id,
+  1148→        lawyerId: lawyer.id,
+  1149→        caseId: cases[0].id,
+  1150→      },
+  1151→    }),
+  1152→    db.activity.create({
+  1153→      data: {
+  1154→        action: 'task_completed',
+  1155→        description: 'تم إكمال مراجعة تقرير الخبير الجنائي',
+  1156→        entity: 'task',
+  1157→        entityId: tasks[3].id,
+  1158→        lawyerId: lawyer.id,
+  1159→        caseId: cases[1].id,
+  1160→      },
+  1161→    }),
+  1162→    db.activity.create({
+  1163→      data: {
+  1164→        action: 'case_status_changed',
+  1165→        description: 'تم تغيير حالة قضية التحصيل إلى "مغلق"',
+  1166→        entity: 'case',
+  1167→        entityId: cases[5].id,
+  1168→        lawyerId: lawyer.id,
+  1169→        caseId: cases[5].id,
+  1170→      },
+  1171→    }),
+  1172→    db.activity.create({
+  1173→      data: {
+  1174→        action: 'invoice_sent',
+  1175→        description: 'تم إرسال فاتورة أتعاب المرافعة',
+  1176→        entity: 'billing',
+  1177→        entityId: billings[1].id,
+  1178→        lawyerId: lawyer.id,
+  1179→        caseId: cases[1].id,
+  1180→      },
+  1181→    }),
+  1182→    db.activity.create({
+  1183→      data: {
+  1184→        action: 'task_created',
+  1185→        description: 'تم إضافة مهمة تحضير مذكرة الدفاع',
+  1186→        entity: 'task',
+  1187→        entityId: tasks[0].id,
+  1188→        lawyerId: lawyer.id,
+  1189→        caseId: cases[0].id,
+  1190→      },
+  1191→    }),
+  1192→    db.activity.create({
+  1193→      data: {
+  1194→        action: 'hearing_scheduled',
+  1195→        description: 'تم تحديد موعد جلسة جديدة في قضية التوريد',
+  1196→        entity: 'case',
+  1197→        entityId: cases[2].id,
+  1198→        lawyerId: lawyer.id,
+  1199→        caseId: cases[2].id,
+  1200→      },
+  1201→    }),
+  1202→    db.activity.create({
+  1203→      data: {
+  1204→        action: 'client_added',
+  1205→        description: 'تم إضافة عميل جديد: شركة النور للتجارة',
+  1206→        entity: 'client',
+  1207→        entityId: clients[1].id,
+  1208→        lawyerId: lawyer.id,
+  1209→      },
+  1210→    }),
+  1211→    db.activity.create({
+  1212→      data: {
+  1213→        action: 'document_uploaded',
+  1214→        description: 'تم رفع تقرير الخبير العقاري',
+  1215→        entity: 'document',
+  1216→        entityId: documents[11].id,
+  1217→        lawyerId: lawyer.id,
+  1218→        caseId: cases[0].id,
+  1219→      },
+  1220→    }),
+  1221→    db.activity.create({
+  1222→      data: {
+  1223→        action: 'settlement_reached',
+  1224→        description: 'تم التوصل إلى تسوية في قضية الشراكة التجارية',
+  1225→        entity: 'case',
+  1226→        entityId: cases[6].id,
+  1227→        lawyerId: lawyer.id,
+  1228→        caseId: cases[6].id,
+  1229→      },
+  1230→    }),
+  1231→    db.activity.create({
+  1232→      data: {
+  1233→        action: 'case_created',
+  1234→        description: 'تم إنشاء قضية احتيال إلكتروني جديدة',
+  1235→        entity: 'case',
+  1236→        entityId: cases[7].id,
+  1237→        lawyerId: lawyer.id,
+  1238→        caseId: cases[7].id,
+  1239→      },
+  1240→    }),
+  1241→    db.activity.create({
+  1242→      data: {
+  1243→        action: 'task_completed',
+  1244→        description: 'تم إكمال تقديم البلاغ للنيابة العامة',
+  1245→        entity: 'task',
+  1246→        entityId: tasks[12].id,
+  1247→        lawyerId: lawyer.id,
+  1248→        caseId: cases[7].id,
+  1249→      },
+  1250→    }),
+  1251→    db.activity.create({
+  1252→      data: {
+  1253→        action: 'invoice_paid',
+  1254→        description: 'تم استلام دفعة فاتورة قضية التحصيل',
+  1255→        entity: 'billing',
+  1256→        entityId: billings[8].id,
+  1257→        lawyerId: lawyer.id,
+  1258→        caseId: cases[5].id,
+  1259→      },
+  1260→    }),
+  1261→    db.activity.create({
+  1262→      data: {
+  1263→        action: 'case_status_changed',
+  1264→        description: 'تم تحويل قضية الشيكات إلى مرحلة المحاكمة',
+  1265→        entity: 'case',
+  1266→        entityId: cases[10].id,
+  1267→        lawyerId: lawyer.id,
+  1268→        caseId: cases[10].id,
+  1269→      },
+  1270→    }),
+  1271→    db.activity.create({
+  1272→      data: {
+  1273→        action: 'task_created',
+  1274→        description: 'تم إضافة مهمة طلب تعيين خبير خطوط',
+  1275→        entity: 'task',
+  1276→        entityId: tasks[24].id,
+  1277→        lawyerId: lawyer.id,
+  1278→        caseId: cases[1].id,
+  1279→      },
+  1280→    }),
+  1281→  ]);
+  1282→  console.log(`✅ ${activities.length} activity log entries created`);
+  1283→
+  1284→  // ─── 9. Feature Flags ────────────────────────────────────────────
+  1285→  const featureFlags = await Promise.all([
+  1286→    db.featureFlag.create({
+  1287→      data: {
+  1288→        key: 'pro_dashboard',
+  1289→        label: 'Pro Dashboard',
+  1290→        description: 'لوحة تحكم متقدمة مع إحصائيات شاملة وتقارير تفصيلية',
+  1291→        enabled: true,
+  1292→      },
+  1293→    }),
+  1294→    db.featureFlag.create({
+  1295→      data: {
+  1296→        key: 'advanced_analytics',
+  1297→        label: 'Advanced Analytics',
+  1298→        description: 'تحليلات متقدمة للقضايا والإيرادات والأداء',
+  1299→        enabled: true,
+  1300→      },
+  1301→    }),
+  1302→    db.featureFlag.create({
+  1303→      data: {
+  1304→        key: 'ai_assist',
+  1305→        label: 'AI Legal Assistant',
+  1306→        description: 'مساعد قانوني ذكي يعمل بالذكاء الاصطناعي لمساعدة المحامي',
+  1307→        enabled: false,
+  1308→      },
+  1309→    }),
+  1310→    db.featureFlag.create({
+  1311→      data: {
+  1312→        key: 'client_portal_sync',
+  1313→        label: 'Client Portal Sync',
+  1314→        description: 'مزامنة فورية مع بوابة العميل لتحديث المعلومات تلقائياً',
+  1315→        enabled: true,
+  1316→      },
+  1317→    }),
+  1318→    db.featureFlag.create({
+  1319→      data: {
+  1320→        key: 'bulk_operations',
+  1321→        label: 'Bulk Operations',
+  1322→        description: 'إمكانية تنفيذ عمليات جماعية على القضايا والمهام والمستندات',
+  1323→        enabled: false,
+  1324→      },
+  1325→    }),
+  1326→  ]);
+  1327→  console.log(`✅ ${featureFlags.length} feature flags created`);
+  1328→
+  1329→  // ─── Summary ─────────────────────────────────────────────────────
+  1330→  console.log('\n═══════════════════════════════════════════════');
+  1331→  console.log('  ✨ Wakeely Pro Database Seeded Successfully!');
+  1332→  console.log('═══════════════════════════════════════════════');
+  1333→  console.log(`  👤 Lawyer:       1`);
+  1334→  console.log(`  👥 Clients:      ${clients.length}`);
+  1335→  console.log(`  📋 Cases:        ${cases.length}`);
+  1336→  console.log(`  ✅ Tasks:        ${tasks.length}`);
+  1337→  console.log(`  📄 Documents:    ${documents.length}`);
+  1338→  console.log(`  💰 Billings:     ${billings.length}`);
+  1339→  console.log(`  📅 Timeline:     ${timelineEvents.length}`);
+  1340→  console.log(`  📝 Activities:   ${activities.length}`);
+  1341→  console.log(`  🚩 Feature Flags: ${featureFlags.length}`);
+  1342→  console.log('═══════════════════════════════════════════════\n');
+  1343→}
+  1344→
+  1345→main()
+  1346→  .then(async () => {
+  1347→    await db.$disconnect();
+  1348→  })
+  1349→  .catch(async (e) => {
+  1350→    console.error('❌ Seed failed:', e);
+  1351→    await db.$disconnect();
+  1352→    process.exit(1);
+  1353→  });

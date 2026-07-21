@@ -18,6 +18,14 @@ const en: Translations = {
   'nav.allCases': 'All Cases',
   'nav.reports': 'Reports',
   'nav.logout': 'Logout',
+  'nav.kanban': 'Kanban Board',
+  'nav.timeTracking': 'Time Tracking',
+  'nav.team': 'Team',
+  'nav.evidence': 'Evidence',
+  'nav.aiAssistant': 'AI Assistant',
+  'nav.clientPortal': 'Client Portal',
+  'nav.auditTrail': 'Audit Trail',
+  'nav.privilegeLog': 'Privilege Log',
 
   // ─── Case Statuses ──────────────────────────────────────────────
   'status.intake': 'Intake',
@@ -240,6 +248,124 @@ const en: Translations = {
   'pro.enabled': 'Enabled',
   'pro.disabled': 'Disabled',
 
+  // ─── Parties ────────────────────────────────────────────────────
+  'party.plaintiff': 'Plaintiff',
+  'party.defendant': 'Defendant',
+  'party.witness': 'Witness',
+  'party.expert': 'Expert',
+  'party.opposingCounsel': 'Opposing Counsel',
+  'party.judge': 'Judge',
+  'party.thirdParty': 'Third Party',
+  'parties.title': 'Parties',
+
+  // ─── Team Roles ─────────────────────────────────────────────────
+  'team.partner': 'Partner',
+  'team.seniorAssociate': 'Senior Associate',
+  'team.associate': 'Associate',
+  'team.paralegal': 'Paralegal',
+  'team.trainee': 'Trainee',
+  'team.admin': 'Admin',
+
+  // ─── Time Tracking ──────────────────────────────────────────────
+  'time.title': 'Time Tracking',
+  'time.startTimer': 'Start Timer',
+  'time.stopTimer': 'Stop Timer',
+  'time.logEntry': 'Log Time',
+  'time.duration': 'Duration',
+  'time.billable': 'Billable',
+  'time.activityType': 'Activity Type',
+  'time.totalHours': 'Total Hours',
+  'time.billableHours': 'Billable Hours',
+  'time.research': 'Research',
+  'time.drafting': 'Drafting',
+  'time.review': 'Review',
+  'time.meeting': 'Meeting',
+  'time.court': 'Court Appearance',
+  'time.phone': 'Phone Call',
+  'time.email': 'Email',
+  'time.other': 'Other',
+
+  // ─── Expense Categories ─────────────────────────────────────────
+  'expense.title': 'Expenses',
+  'expense.travel': 'Travel',
+  'expense.filing': 'Filing Fees',
+  'expense.expert': 'Expert Fees',
+  'expense.courier': 'Courier',
+  'expense.printing': 'Printing',
+  'expense.other': 'Other',
+
+  // ─── Calendar Event Types ───────────────────────────────────────
+  'calendar.title': 'Calendar',
+  'calendar.hearing': 'Hearing',
+  'calendar.filing': 'Filing',
+  'calendar.meeting': 'Meeting',
+  'calendar.deadline': 'Deadline',
+  'calendar.trial': 'Trial',
+  'calendar.deposition': 'Deposition',
+  'calendar.mediation': 'Mediation',
+  'calendar.location': 'Location',
+  'calendar.reminder': 'Reminder',
+
+  // ─── Evidence ───────────────────────────────────────────────────
+  'evidence.title': 'Evidence & Discovery',
+  'evidence.document': 'Document',
+  'evidence.photo': 'Photo',
+  'evidence.video': 'Video',
+  'evidence.physical': 'Physical Evidence',
+  'evidence.digital': 'Digital',
+  'evidence.testimony': 'Testimony',
+  'evidence.privileged': 'Privileged',
+  'evidence.confidential': 'Confidential',
+  'evidence.source': 'Source',
+  'evidence.chainOfCustody': 'Chain of Custody',
+
+  // ─── AI Assistant ───────────────────────────────────────────────
+  'ai.title': 'AI Legal Assistant',
+  'ai.placeholder': 'Ask about your case, documents, or legal strategies...',
+  'ai.summarize': 'Summarize Case',
+  'ai.draft': 'Draft Document',
+  'ai.analyze': 'Analyze Risk',
+  'ai.suggest': 'Suggest Strategy',
+
+  // ─── Reports ────────────────────────────────────────────────────
+  'reports.title': 'Reports & Analytics',
+  'reports.caseMetrics': 'Case Metrics',
+  'reports.financial': 'Financial Report',
+  'reports.timeReport': 'Time Report',
+  'reports.teamPerformance': 'Team Performance',
+  'reports.profitability': 'Profitability',
+  'reports.deadlineReport': 'Deadline Report',
+  'reports.export': 'Export PDF',
+
+  // ─── Client Portal ──────────────────────────────────────────────
+  'portal.title': 'Client Portal Control',
+  'portal.visibleSections': 'Visible Sections to Client',
+  'portal.timeline': 'Timeline',
+  'portal.documents': 'Documents',
+  'portal.billing': 'Billing',
+  'portal.tasks': 'Tasks Status',
+  'portal.comments': 'Comments',
+
+  // ─── Audit ──────────────────────────────────────────────────────
+  'audit.title': 'Audit Trail',
+  'audit.user': 'User',
+  'audit.action': 'Action',
+  'audit.timestamp': 'Timestamp',
+  'audit.details': 'Details',
+  'audit.ip': 'IP Address',
+
+  // ─── Comments ────────────────────────────────────────────────────
+  'comments.title': 'Comments & Notes',
+  'comments.internal': 'Internal Only',
+  'comments.visibleToClient': 'Visible to Client',
+  'comments.addComment': 'Add Comment',
+  'comments.placeholder': 'Write a comment...',
+
+  // ─── Case Extra Fields ──────────────────────────────────────────
+  'cases.jurisdiction': 'Jurisdiction',
+  'cases.opposingCounsel': 'Opposing Counsel',
+  'cases.statuteOfLimitations': 'Statute of Limitations',
+
   // ─── Common Labels ──────────────────────────────────────────────
   'common.name': 'Name',
   'common.email': 'Email',
@@ -281,6 +407,14 @@ const ar: Translations = {
   'nav.allCases': 'جميع القضايا',
   'nav.reports': 'التقارير',
   'nav.logout': 'تسجيل الخروج',
+  'nav.kanban': 'لوحة كانبان',
+  'nav.timeTracking': 'تتبع الوقت',
+  'nav.team': 'الفريق',
+  'nav.evidence': 'الأدلة',
+  'nav.aiAssistant': 'مساعد ذكي',
+  'nav.clientPortal': 'بوابة العميل',
+  'nav.auditTrail': 'سجل التدقيق',
+  'nav.privilegeLog': 'سجل الامتياز',
 
   // ─── Case Statuses ──────────────────────────────────────────────
   'status.intake': 'استلام',
@@ -502,6 +636,124 @@ const ar: Translations = {
   'pro.upgrade': 'الترقية لبرو',
   'pro.enabled': 'مفعّل',
   'pro.disabled': 'معطّل',
+
+  // ─── Parties ────────────────────────────────────────────────────
+  'party.plaintiff': 'مدعي',
+  'party.defendant': 'مدعى عليه',
+  'party.witness': 'شاهد',
+  'party.expert': 'خبير',
+  'party.opposingCounsel': 'محامي الخصم',
+  'party.judge': 'قاضي',
+  'party.thirdParty': 'طرف ثالث',
+  'parties.title': 'الأطراف',
+
+  // ─── Team Roles ─────────────────────────────────────────────────
+  'team.partner': 'شريك',
+  'team.seniorAssociate': 'مشارك أول',
+  'team.associate': 'مشارك',
+  'team.paralegal': 'مساعد قانوني',
+  'team.trainee': 'متدرب',
+  'team.admin': 'إداري',
+
+  // ─── Time Tracking ──────────────────────────────────────────────
+  'time.title': 'تتبع الوقت',
+  'time.startTimer': 'بدء المؤقت',
+  'time.stopTimer': 'إيقاف المؤقت',
+  'time.logEntry': 'تسجيل وقت',
+  'time.duration': 'المدة',
+  'time.billable': 'قابل للفوترة',
+  'time.activityType': 'نوع النشاط',
+  'time.totalHours': 'إجمالي الساعات',
+  'time.billableHours': 'ساعات قابلة للفوترة',
+  'time.research': 'بحث',
+  'time.drafting': 'صياغة',
+  'time.review': 'مراجعة',
+  'time.meeting': 'اجتماع',
+  'time.court': 'جلسة محكمة',
+  'time.phone': 'مكالمة هاتفية',
+  'time.email': 'بريد إلكتروني',
+  'time.other': 'أخرى',
+
+  // ─── Expense Categories ─────────────────────────────────────────
+  'expense.title': 'المصروفات',
+  'expense.travel': 'سفر',
+  'expense.filing': 'رسوم تقديم',
+  'expense.expert': 'رسوم خبراء',
+  'expense.courier': 'بريد سريع',
+  'expense.printing': 'طباعة',
+  'expense.other': 'أخرى',
+
+  // ─── Calendar Event Types ───────────────────────────────────────
+  'calendar.title': 'التقويم',
+  'calendar.hearing': 'جلسة',
+  'calendar.filing': 'تقديم',
+  'calendar.meeting': 'اجتماع',
+  'calendar.deadline': 'موعد نهائي',
+  'calendar.trial': 'محاكمة',
+  'calendar.deposition': 'إفادة',
+  'calendar.mediation': 'وساطة',
+  'calendar.location': 'الموقع',
+  'calendar.reminder': 'تذكير',
+
+  // ─── Evidence ───────────────────────────────────────────────────
+  'evidence.title': 'الأدلة والاستكشاف',
+  'evidence.document': 'مستند',
+  'evidence.photo': 'صورة',
+  'evidence.video': 'فيديو',
+  'evidence.physical': 'دليل مادي',
+  'evidence.digital': 'رقمي',
+  'evidence.testimony': 'شهادة',
+  'evidence.privileged': 'محمي بالامتياز',
+  'evidence.confidential': 'سري',
+  'evidence.source': 'المصدر',
+  'evidence.chainOfCustody': 'سلسلة الحيازة',
+
+  // ─── AI Assistant ───────────────────────────────────────────────
+  'ai.title': 'مساعد قانوني ذكي',
+  'ai.placeholder': 'اسأل عن قضيتك أو مستنداتك أو استراتيجياتك القانونية...',
+  'ai.summarize': 'تلخيص القضية',
+  'ai.draft': 'صياغة مستند',
+  'ai.analyze': 'تحليل المخاطر',
+  'ai.suggest': 'اقتراح استراتيجية',
+
+  // ─── Reports ────────────────────────────────────────────────────
+  'reports.title': 'التقارير والتحليلات',
+  'reports.caseMetrics': 'مقاييس القضايا',
+  'reports.financial': 'تقرير مالي',
+  'reports.timeReport': 'تقرير الوقت',
+  'reports.teamPerformance': 'أداء الفريق',
+  'reports.profitability': 'الربحية',
+  'reports.deadlineReport': 'تقرير المواعيد النهائية',
+  'reports.export': 'تصدير PDF',
+
+  // ─── Client Portal ──────────────────────────────────────────────
+  'portal.title': 'التحكم في بوابة العميل',
+  'portal.visibleSections': 'الأقسام المرئية للعميل',
+  'portal.timeline': 'الجدول الزمني',
+  'portal.documents': 'المستندات',
+  'portal.billing': 'الفواتير',
+  'portal.tasks': 'حالة المهام',
+  'portal.comments': 'التعليقات',
+
+  // ─── Audit ──────────────────────────────────────────────────────
+  'audit.title': 'سجل التدقيق',
+  'audit.user': 'المستخدم',
+  'audit.action': 'الإجراء',
+  'audit.timestamp': 'التوقيت',
+  'audit.details': 'التفاصيل',
+  'audit.ip': 'عنوان IP',
+
+  // ─── Comments ────────────────────────────────────────────────────
+  'comments.title': 'التعليقات والملاحظات',
+  'comments.internal': 'داخلي فقط',
+  'comments.visibleToClient': 'مرئي للعميل',
+  'comments.addComment': 'إضافة تعليق',
+  'comments.placeholder': 'اكتب تعليقاً...',
+
+  // ─── Case Extra Fields ──────────────────────────────────────────
+  'cases.jurisdiction': 'الاختصاص القضائي',
+  'cases.opposingCounsel': 'محامي الخصم',
+  'cases.statuteOfLimitations': 'تقادم الدعوى',
 
   // ─── Common Labels ──────────────────────────────────────────────
   'common.name': 'الاسم',

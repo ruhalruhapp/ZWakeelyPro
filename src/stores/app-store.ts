@@ -129,6 +129,67 @@ export interface FeatureFlags {
   [key: string]: boolean;
 }
 
+export interface PartyItem {
+  id: string; name: string; role: string; type: string;
+  email?: string; phone?: string; lawyer?: string; notes?: string;
+  caseId: string; createdAt: string; updatedAt: string;
+}
+
+export interface TeamMemberItem {
+  id: string; name: string; email: string; role: string;
+  phone?: string; avatarUrl?: string; barNumber?: string;
+  specialization?: string; isActive: boolean;
+  createdAt: string; updatedAt: string;
+}
+
+export interface CommentItem {
+  id: string; content: string; isInternal: boolean;
+  caseId: string; lawyerId?: string; memberId?: string;
+  parentId?: string; lawyer?: { name: string };
+  member?: { name: string };
+  replies: CommentItem[];
+  createdAt: string; updatedAt: string;
+}
+
+export interface TimeEntryItem {
+  id: string; description: string; duration: number; // minutes
+  rate?: number; isBillable: boolean;
+  activityType: string; date: string; notes?: string;
+  caseId: string; lawyerId: string;
+  createdAt: string; updatedAt: string;
+}
+
+export interface ExpenseItem {
+  id: string; description: string; amount: number;
+  currency: string; category: string; isBillable: boolean;
+  date: string; receiptPath?: string; notes?: string;
+  caseId: string; createdAt: string; updatedAt: string;
+}
+
+export interface CalendarEventItem {
+  id: string; title: string; description?: string;
+  eventType: string; startDate: string; endDate?: string;
+  allDay: boolean; location?: string; color?: string;
+  reminder?: string; caseId?: string;
+  createdAt: string; updatedAt: string;
+}
+
+export interface EvidenceItem {
+  id: string; title: string; description?: string;
+  itemType: string; category?: string; dateReceived?: string;
+  isPrivileged: boolean; privilegeType?: string;
+  isConfidential: boolean; tags?: string;
+  linkedDocId?: string; source?: string;
+  caseId: string; createdAt: string; updatedAt: string;
+}
+
+export interface PrivilegeLogItem {
+  id: string; documentTitle: string; privilegeType: string;
+  dateCreated?: string; description?: string;
+  withheldFrom?: string; caseId: string;
+  createdAt: string; updatedAt: string;
+}
+
 // ─── App State Interface ────────────────────────────────────────────────────
 
 export interface AppState {
@@ -160,6 +221,42 @@ export interface AppState {
   // Clients
   clients: ClientItem[];
   setClients: (clients: ClientItem[]) => void;
+
+  // Parties
+  parties: PartyItem[];
+  setParties: (parties: PartyItem[]) => void;
+
+  // Team Members
+  teamMembers: TeamMemberItem[];
+  setTeamMembers: (members: TeamMemberItem[]) => void;
+
+  // Comments
+  comments: CommentItem[];
+  setComments: (comments: CommentItem[]) => void;
+
+  // Time Entries
+  timeEntries: TimeEntryItem[];
+  setTimeEntries: (entries: TimeEntryItem[]) => void;
+
+  // Expenses
+  expenses: ExpenseItem[];
+  setExpenses: (expenses: ExpenseItem[]) => void;
+
+  // Calendar Events
+  calendarEvents: CalendarEventItem[];
+  setCalendarEvents: (events: CalendarEventItem[]) => void;
+
+  // Evidence Items
+  evidenceItems: EvidenceItem[];
+  setEvidenceItems: (items: EvidenceItem[]) => void;
+
+  // Privilege Logs
+  privilegeLogs: PrivilegeLogItem[];
+  setPrivilegeLogs: (logs: PrivilegeLogItem[]) => void;
+
+  // Timer state
+  activeTimer: { caseId: string; description: string; startTime: number } | null;
+  setActiveTimer: (timer: { caseId: string; description: string; startTime: number } | null) => void;
 
   // UI State
   sidebarOpen: boolean;
@@ -231,6 +328,42 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Clients
   clients: [],
   setClients: (clients) => set({ clients }),
+
+  // Parties
+  parties: [],
+  setParties: (parties) => set({ parties }),
+
+  // Team Members
+  teamMembers: [],
+  setTeamMembers: (members) => set({ teamMembers: members }),
+
+  // Comments
+  comments: [],
+  setComments: (comments) => set({ comments }),
+
+  // Time Entries
+  timeEntries: [],
+  setTimeEntries: (entries) => set({ timeEntries: entries }),
+
+  // Expenses
+  expenses: [],
+  setExpenses: (expenses) => set({ expenses }),
+
+  // Calendar Events
+  calendarEvents: [],
+  setCalendarEvents: (events) => set({ calendarEvents: events }),
+
+  // Evidence Items
+  evidenceItems: [],
+  setEvidenceItems: (items) => set({ evidenceItems: items }),
+
+  // Privilege Logs
+  privilegeLogs: [],
+  setPrivilegeLogs: (logs) => set({ privilegeLogs: logs }),
+
+  // Timer state
+  activeTimer: null,
+  setActiveTimer: (timer) => set({ activeTimer: timer }),
 
   // UI State
   sidebarOpen: true,
