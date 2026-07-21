@@ -336,7 +336,8 @@ export function DashboardView() {
 
         // Transform feature flags
         const flagMap: Record<string, boolean> = {};
-        (flagsData.flags ?? []).forEach((f: { key: string; enabled: boolean }) => {
+        const flagsArr = Array.isArray(flagsData) ? flagsData : (flagsData.flags ?? []);
+        flagsArr.forEach((f: { key: string; enabled: boolean }) => {
           flagMap[f.key] = f.enabled;
         });
         setFeatureFlags(flagMap);

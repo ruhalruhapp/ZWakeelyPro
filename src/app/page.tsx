@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useAppStore } from '@/stores/app-store';
 import { AppSidebar } from '@/components/wakeely/app-sidebar';
 import { DashboardView } from '@/components/wakeely/dashboard-view';
@@ -11,71 +10,48 @@ import { BillingView } from '@/components/wakeely/billing-view';
 import { DocumentsView } from '@/components/wakeely/documents-view';
 import { ProFeaturesView } from '@/components/wakeely/pro-features-view';
 import { SettingsView } from '@/components/wakeely/settings-view';
+import { KanbanView } from '@/components/wakeely/kanban-view';
+import { CalendarView } from '@/components/wakeely/calendar-view';
+import { TimeTrackingView } from '@/components/wakeely/time-tracking-view';
+import { TeamView } from '@/components/wakeely/team-view';
+import { EvidenceView } from '@/components/wakeely/evidence-view';
+import { AIAssistantView } from '@/components/wakeely/ai-assistant-view';
+import { ReportsView } from '@/components/wakeely/reports-view';
+import { ClientPortalView } from '@/components/wakeely/client-portal-view';
+import { AuditTrailView } from '@/components/wakeely/audit-trail-view';
 import { CreateCaseDialog } from '@/components/wakeely/create-case-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
-function ViewLoader() {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-72" />
-        </div>
-        <Skeleton className="h-10 w-32" />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-32 rounded-xl" />
-        ))}
-      </div>
-      <Skeleton className="h-64 rounded-xl" />
-    </div>
-  );
-}
+const viewMap: Record<string, React.ComponentType> = {
+  dashboard: DashboardView,
+  cases: CasesListView,
+  kanban: KanbanView,
+  tasks: TasksView,
+  calendar: CalendarView,
+  'time-tracking': TimeTrackingView,
+  clients: ClientsView,
+  team: TeamView,
+  documents: DocumentsView,
+  evidence: EvidenceView,
+  billing: BillingView,
+  'ai-assistant': AIAssistantView,
+  reports: ReportsView,
+  'client-portal': ClientPortalView,
+  'audit-trail': AuditTrailView,
+  'pro-features': ProFeaturesView,
+  settings: SettingsView,
+};
 
 export default function Home() {
-  const {
-    currentView,
-    sidebarOpen,
-    language,
-    isLoading,
-    setIsLoading,
-  } = useAppStore();
-
+  const { currentView, sidebarOpen, language } = useAppStore();
   const isRtl = language === 'ar';
 
-  const renderView = () => {
-    switch (currentView) {
-      case 'dashboard':
-        return <DashboardView />;
-      case 'cases':
-        return <CasesListView />;
-      case 'tasks':
-        return <TasksView />;
-      case 'clients':
-        return <ClientsView />;
-      case 'billing':
-        return <BillingView />;
-      case 'documents':
-        return <DocumentsView />;
-      case 'pro-features':
-        return <ProFeaturesView />;
-      case 'settings':
-        return <SettingsView />;
-      default:
-        return <DashboardView />;
-    }
-  };
+  const ViewComponent = viewMap[currentView] || DashboardView;
 
   return (
     <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-slate-50">
-      {/* Sidebar */}
       <AppSidebar />
 
-      {/* Main Content */}
       <main
         className={`transition-all duration-300 ${
           sidebarOpen
@@ -99,11 +75,10 @@ export default function Home() {
 
         {/* Page Content */}
         <div className="p-4 md:p-6 lg:p-8">
-          {renderView()}
+          <ViewComponent />
         </div>
       </main>
 
-      {/* Create Case Dialog (global) */}
       <CreateCaseDialog />
     </div>
   );

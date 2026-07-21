@@ -15,11 +15,18 @@ import {
   ChevronLeft,
   Scale,
   Menu,
-  X,
   Globe,
+  Columns3,
+  CalendarDays,
+  Clock,
+  UsersRound,
+  Search,
+  Bot,
+  BarChart3,
+  Eye,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -29,15 +36,60 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-const navItems = [
-  { id: 'dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
-  { id: 'cases', icon: Briefcase, labelKey: 'nav.cases' },
-  { id: 'tasks', icon: CheckSquare, labelKey: 'nav.tasks' },
-  { id: 'clients', icon: Users, labelKey: 'nav.clients' },
-  { id: 'billing', icon: Receipt, labelKey: 'nav.billing' },
-  { id: 'documents', icon: FileText, labelKey: 'nav.documents' },
-  { id: 'pro-features', icon: Sparkles, labelKey: 'nav.proFeatures', proOnly: true },
-  { id: 'settings', icon: Settings, labelKey: 'nav.settings' },
+interface NavItem {
+  id: string;
+  icon: any;
+  labelKey: string;
+}
+
+interface NavSection {
+  labelKey?: string | null;
+  proSection?: boolean;
+  items: NavItem[];
+}
+
+const navSections: NavSection[] = [
+  {
+    items: [
+      { id: 'dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
+      { id: 'cases', icon: Briefcase, labelKey: 'nav.cases' },
+      { id: 'kanban', icon: Columns3, labelKey: 'nav.kanban' },
+      { id: 'tasks', icon: CheckSquare, labelKey: 'nav.tasks' },
+      { id: 'calendar', icon: CalendarDays, labelKey: 'nav.calendar' },
+      { id: 'time-tracking', icon: Clock, labelKey: 'nav.timeTracking' },
+    ],
+  },
+  {
+    labelKey: 'nav.clients',
+    items: [
+      { id: 'clients', icon: Users, labelKey: 'nav.clients' },
+      { id: 'team', icon: UsersRound, labelKey: 'nav.team' },
+    ],
+  },
+  {
+    labelKey: 'cases.documents',
+    items: [
+      { id: 'documents', icon: FileText, labelKey: 'nav.documents' },
+      { id: 'evidence', icon: Search, labelKey: 'nav.evidence' },
+      { id: 'billing', icon: Receipt, labelKey: 'nav.billing' },
+    ],
+  },
+  {
+    labelKey: 'nav.proFeatures',
+    proSection: true,
+    items: [
+      { id: 'ai-assistant', icon: Bot, labelKey: 'nav.aiAssistant' },
+      { id: 'reports', icon: BarChart3, labelKey: 'nav.reports' },
+      { id: 'client-portal', icon: Eye, labelKey: 'nav.clientPortal' },
+      { id: 'audit-trail', icon: ShieldCheck, labelKey: 'nav.auditTrail' },
+      { id: 'pro-features', icon: Sparkles, labelKey: 'nav.proFeatures' },
+    ],
+  },
+  {
+    items: [
+      { id: 'settings', icon: Settings, labelKey: 'nav.settings' },
+    ],
+  },
 ];
 
 export function AppSidebar() {
@@ -53,7 +105,24 @@ export function AppSidebar() {
   } = useAppStore();
 
   const isRtl = language === 'ar';
+  const setFeatureFlags = useAppStore((s) => s.setFeatureFlags);
   const isPro = featureFlags['pro_dashboard'] === true;
+
+  // Fetch feature flags on mount if not loaded
+  React.useEffect(() => {
+    if (Object.keys(featureFlags).length > 0) return;
+    fetch('/api/feature-flags')
+      .then((r) => r.json())
+      .then((data) => {
+        const map: Record<string, boolean> = {};
+        const flags = Array.isArray(data) ? data : (data.flags ?? []);
+        flags.forEach((f: { key: string; enabled: boolean }) => {
+          map[f.key] = f.enabled;
+        });
+        setFeatureFlags(map);
+      })
+      .catch(() => {});
+  }, [featureFlags, setFeatureFlags]);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -63,7 +132,7 @@ export function AppSidebar() {
         }`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-4 h-16 border-b border-slate-700/50">
+        <div className="flex items-center gap-3 px-4 h-14 border-b border-slate-700/50">
           <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-500 shrink-0">
             <Scale className="w-5 h-5 text-white" />
           </div>
@@ -88,65 +157,69 @@ export function AppSidebar() {
         </div>
 
         {/* Navigation */}
-        <ScrollArea className="flex-1 py-4">
-          <nav className="px-3 space-y-1">
-            {navItems.map((item) => {
-              const isActive = currentView === item.id;
-              const showItem = !item.proOnly || isPro;
-              if (!showItem) return null;
+        <ScrollArea className="flex-1 py-3">
+          <nav className="px-3 space-y-4">
+            {navSections.map((section, si) => {
+              const showSection = !section.proSection || isPro;
+              if (!showSection) return null;
 
-              const Icon = item.icon;
-              const label = t(item.labelKey, language);
-
-              const button = (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setCurrentView(item.id);
-                    setSelectedCaseId(null);
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group ${
-                    isActive
-                      ? 'bg-emerald-500/15 text-emerald-400'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  } ${!sidebarOpen ? 'justify-center' : ''}`}
-                >
-                  <Icon
-                    className={`w-5 h-5 shrink-0 ${
-                      isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-white'
-                    }`}
-                  />
-                  {sidebarOpen && <span className="truncate">{label}</span>}
-                  {sidebarOpen && item.proOnly && (
-                    <Badge
-                      variant="outline"
-                      className="ml-auto text-[10px] px-1.5 py-0 border-emerald-500/50 text-emerald-400"
-                    >
-                      PRO
-                    </Badge>
+              return (
+                <div key={si}>
+                  {sidebarOpen && section.labelKey && (
+                    <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                      {t(section.labelKey, language)}
+                    </p>
                   )}
-                </button>
+                  <div className="space-y-0.5">
+                    {section.items.map((item) => {
+                      const isActive = currentView === item.id;
+                      const Icon = item.icon;
+                      const label = t(item.labelKey, language);
+
+                      const button = (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setCurrentView(item.id);
+                            setSelectedCaseId(null);
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 group ${
+                            isActive
+                              ? 'bg-emerald-500/15 text-emerald-400'
+                              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          } ${!sidebarOpen ? 'justify-center' : ''}`}
+                        >
+                          <Icon
+                            className={`w-5 h-5 shrink-0 ${
+                              isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-white'
+                            }`}
+                          />
+                          {sidebarOpen && <span className="truncate">{label}</span>}
+                        </button>
+                      );
+
+                      if (!sidebarOpen) {
+                        return (
+                          <Tooltip key={item.id}>
+                            <TooltipTrigger asChild>{button}</TooltipTrigger>
+                            <TooltipContent side={isRtl ? 'left' : 'right'} className="font-medium">
+                              {label}
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      }
+
+                      return button;
+                    })}
+                  </div>
+                </div>
               );
-
-              if (!sidebarOpen) {
-                return (
-                  <Tooltip key={item.id}>
-                    <TooltipTrigger asChild>{button}</TooltipTrigger>
-                    <TooltipContent side={isRtl ? 'left' : 'right'} className="font-medium">
-                      {label}
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              }
-
-              return button;
             })}
           </nav>
         </ScrollArea>
 
         {/* Footer */}
         <div className="border-t border-slate-700/50 p-3 space-y-2">
-          {/* Language Toggle */}
           {sidebarOpen ? (
             <button
               onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
@@ -171,7 +244,6 @@ export function AppSidebar() {
             </Tooltip>
           )}
 
-          {/* Collapse Toggle */}
           {!sidebarOpen && (
             <Tooltip>
               <TooltipTrigger asChild>

@@ -285,3 +285,162 @@ Returns comprehensive data in one response:
 - All new AppState properties and setters already present (parties, teamMembers, comments, timeEntries, expenses, calendarEvents, evidenceItems, privilegeLogs, activeTimer)
 - All store initial state and actions already implemented
 - `bun run lint` — passed cleanly, no errors
+
+---
+
+## Task 5 — Kanban View, Calendar View, Time Tracking View
+
+**Status:** ✅ Completed
+
+### Files Created
+
+1. **`src/components/wakeely/kanban-view.tsx`** — Drag-and-drop Kanban board (KanbanView)
+2. **`src/components/wakeely/calendar-view.tsx`** — Monthly calendar grid with event management (CalendarView)
+3. **`src/components/wakeely/time-tracking-view.tsx`** — Timer, time entries table, and expense logging (TimeTrackingView)
+
+### File 1: kanban-view.tsx (KanbanView)
+
+- **4-column board** — pending | in_progress | completed | cancelled, horizontally scrollable with min-w/max-w per column
+- **DnD with @dnd-kit** — `DndContext` + `SortableContext` + `useSortable` per card, `closestCorners` collision detection, `PointerSensor` with 5px activation distance
+- **Task cards** — Grip handle (GripVertical), Checkbox to toggle complete, title, priority badge, due date (rose if overdue), case reference
+- **Overdue tasks** — Rose left border (`border-s-4 border-s-rose-400`) matching tasks-view pattern
+- **Drag → status update** — On dragEnd, detects target column, optimistic update, PUT to `/api/tasks/[id]` with new status, reverts on failure
+- **Column styling** — Each column has distinct bg/border: pending (slate), in_progress (amber), completed (emerald), cancelled (gray)
+- **Loading skeleton** — 4-column placeholder with skeleton cards
+- **Empty state** — Inbox icon + "no tasks" message
+- **RTL** — Column flex direction reversed for Arabic, dir wrapper
+
+### File 2: calendar-view.tsx (CalendarView)
+
+- **Monthly grid** — 7-column grid (Sat–Fri for Arabic, Sun–Sat for English), dynamic padding to fill rows
+- **Day cells** — Day number in circle (today=emerald filled), up to 3 event pills with color-coded dots and truncated titles, +N overflow indicator
+- **Mobile** — Dots only (no text pills) on small screens
+- **Event color coding** — hearing: emerald, filing: amber, meeting: sky, deadline: rose, trial: purple, deposition: orange, mediation: teal
+- **Event detail panel** — Desktop: right side sticky Card (320px) with animated entrance; Mobile: bottom Sheet with full event list
+- **Event cards** — Colored top bar, title, type badge, time (Clock icon), location (MapPin icon), case reference
+- **Add Event Dialog** — Title, description, eventType select (7 types), startDate, endDate, allDay toggle (Switch), location, reminder select (none/5m/15m/30m/1h/1d), caseId select
+- **Navigation** — Prev/Next month buttons (RTL-aware chevrons), "Today" button, month/year label via date-fns `format`
+- **Data fetching** — GET `/api/calendar?month=X&year=Y` on month change
+- **date-fns** — startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths, parseISO, format
+
+### File 3: time-tracking-view.tsx (TimeTrackingView)
+
+- **3 stat cards** — Total Hours (Clock icon), Billable Hours (Timer icon), Total Billable Amount (DollarSign icon, Intl.NumberFormat SAR)
+- **Timer section** — Prominent card with emerald gradient border, case select, description input, activity type select, large MM:SS timer display (monospace, tabular-nums), START/STOP button
+- **Timer implementation** — setInterval 1s updates, startTime stored in ref, on stop auto-POSTs to `/api/time-entries`, cleanup on unmount
+- **Time entries table** — Columns: Date, Case, Description, Activity Type (hidden md), Duration (Xh Ym), Rate (hidden sm), Amount (hidden sm), Billable badge, Delete action
+- **Filters** — Case select, date range (from/to), "Log Time" manual entry button
+- **Manual entry dialog** — Case, description, hours/minutes, activity type, rate, date, billable toggle
+- **Expenses section** — Collapsible (Collapsible/AnimatePresence), table: Date, Case, Description, Category badge, Amount, Billable badge, Delete action
+- **Add expense dialog** — Case, description, amount, category select (6 types), date, billable toggle
+- **Delete** — DELETE to `/api/time-entries/[id]` and `/api/expenses/[id]` with toast
+- **Currency formatting** — `Intl.NumberFormat('en-US', { style: 'currency', currency: 'SAR' })`
+
+### Cross-cutting Features (all 3 files)
+
+- **RTL** — `dir={language === 'ar' ? 'rtl' : 'ltr'}` on root wrapper, RTL-aware icons/arrows
+- **i18n** — All text via `t()` with language locale
+- **Color palette** — Emerald/amber/rose/orange/teal/slate — no blue/indigo
+- **Responsive** — Mobile-first with sm/md/lg breakpoints, ScrollArea for tables
+- **Animations** — Framer-motion AnimatePresence for cards/events/rows
+- **Toast** — Success/error via sonner
+- **ESLint** — All 3 files pass clean (only pre-existing error in ai-assistant-view.tsx)
+
+---
+
+## Task 7 — Reports View, Client Portal View, Audit Trail View
+
+**Status:** ✅ Completed
+
+### File 1: `src/components/wakeely/reports-view.tsx` — `ReportsView`
+
+- **5-tab analytics dashboard**: Case Metrics, Financial, Time Report, Team Performance, Deadlines
+- **Tab 1 – Case Metrics**: 4 stat cards (Total/Active/Closed/Avg Days) + BarChart by Status + PieChart by Type + BarChart by Priority
+- **Tab 2 – Financial**: 4 stat cards (Billed/Collected/Outstanding/Expenses) + AreaChart revenue by month + horizontal BarChart top 5 billed cases
+- **Tab 3 – Time Report**: 3 stat cards (Total/Billable/Utilization %) + PieChart by activity type + BarChart by lawyer
+- **Tab 4 – Team Performance**: Table (name, role, active tasks, completed) + grouped BarChart comparison
+- **Tab 5 – Deadlines**: Overdue (rose) → Statute warnings (amber) → Upcoming (emerald); days-remaining badges
+- **Data**: Single fetch from `GET /api/analytics` on mount
+- **Charts**: recharts (BarChart, PieChart, AreaChart, Cell, Tooltip, ResponsiveContainer, Legend, XAxis, YAxis)
+- **Color palette**: emerald, amber, rose, teal, orange, purple, sky — no blue/indigo
+- **Loading**: Skeleton placeholders per tab
+- **RTL**: `dir={language === 'ar' ? 'rtl' : 'ltr'}` wrapper, date-fns `ar` locale for months
+
+### File 2: `src/components/wakeely/client-portal-view.tsx` — `ClientPortalView`
+
+- **Two-column layout**: Left (client select + case list), Right (portal config)
+- **Client dropdown**: from `useAppStore().clients`
+- **Case list**: filtered by selected client, shows caseNumber/title/visibility badge, clickable
+- **Portal Configuration**: 5 Switch toggles (Timeline, Documents, Billing, Tasks, Comments) with icon + description
+- **Summary card**: Shows visible section count with Eye/EyeOff icon
+- **Actions**: "Save Configuration" (emerald, PUT `/api/cases/[id]` with `isVisibleToClient` + `clientAccessConfig` JSON) + "Preview Client View" (outline)
+- **Empty states**: No client selected → shield icon; no case selected → instruction text
+- **Animations**: AnimatePresence for right column transitions, loading skeletons
+- **Toast**: sonner for save success/error
+
+### File 3: `src/components/wakeely/audit-trail-view.tsx` — `AuditTrailView`
+
+- **Top bar**: Title + entry count badge
+- **Filters**: Search input, Entity select (all/case/task/document/billing/…), Action select (dynamically populated)
+- **Table**: 6 columns — Timestamp (font-mono), User (name + email), Action, Entity (colored badge), Description (truncated), IP Address
+- **Entity badges**: case=emerald, task=amber, document=sky, billing=rose, comment=purple, timeline=teal, evidence=orange
+- **Data**: Fetches `GET /api/audit?limit=100`
+- **ScrollArea**: max-h-[70vh] for the table container
+- **Staggered row animation**: framer-motion with delay per row
+- **Date formatting**: date-fns `format()` with `ar` locale
+- **Empty state**: Filter icon + "No results" message
+
+### Lint
+
+- All 3 new files pass ESLint with zero errors/warnings
+- Pre-existing errors in `ai-assistant-view.tsx` (refs accessed during render) are unrelated
+
+---
+
+## Task 6: Create 3 Wakeely Pro View Components
+
+**Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+**Status:** ✅ Completed
+
+### Files Created
+
+1. **`src/components/wakeely/team-view.tsx`** — `TeamView`
+   - Team management page with grid of member cards (3/2/1 responsive cols)
+   - Avatar with colored initials by role (partner=emerald, senior=teal, associate=amber, paralegal=sky, trainee=purple, admin=slate)
+   - Member cards: name (bold), email, phone, specialization, role badge, active cases count, active/inactive toggle (Switch), edit button
+   - Add/Edit Member Dialog: name, email, role select, phone, barNumber, specialization, isActive toggle
+   - CRUD operations: GET /api/team, POST /api/team, PUT /api/team/[id], DELETE /api/team/[id]
+   - Delete confirmation via AlertDialog
+   - Search filtering, loading skeletons, empty state, framer-motion animations
+
+2. **`src/components/wakeely/evidence-view.tsx`** — `EvidenceView`
+   - Evidence & Discovery management with table layout
+   - Top bar: title, search, filter by case, filter by type, Add Evidence button
+   - Filter chips: All, Documents, Photos, Videos, Physical, Digital, Testimony
+   - Toggle buttons: Show Privileged Only, Show Confidential Only
+   - Table columns: Title, Item Type badge, Category, Date Received, Privileged (Lock icon), Confidential (EyeOff icon), Source, Actions
+   - Add/Edit Evidence Dialog: title (required), description, itemType select, category select, dateReceived, isPrivileged toggle + privilegeType select, isConfidential toggle, tags (comma-separated), source, linked case select
+   - View detail dialog with full evidence info
+   - CRUD operations: GET /api/evidence?caseId=, POST /api/evidence, PUT /api/evidence/[id], DELETE /api/evidence/[id]
+
+3. **`src/components/wakeely/ai-assistant-view.tsx`** — `AIAssistantView`
+   - Split view: left sidebar (w-64, collapsible) + right chat area
+   - Left sidebar: Quick Actions (Summarize Case, Draft Document, Analyze Risk, Suggest Strategy), Recent Chats (4 mock titles)
+   - Mobile responsive: sidebar hidden on mobile with overlay toggle
+   - Chat header: AI Legal Assistant title with sparkle icon, case select dropdown
+   - Messages area with ScrollArea, auto-scroll to bottom
+   - Welcome message in Arabic/English based on language
+   - User messages (right-aligned, emerald bg), AI responses (left-aligned, muted bg)
+   - Typing indicator (3 dots animation) for 1-2 second delay
+   - Keyword-matched simulated AI responses (Arabic & English keywords)
+   - Auto-resize textarea (max 4 lines), send button, disabled attachment button
+   - Enter to send, Shift+Enter for newline
+
+### Patterns Used
+- Import pattern: `'use client'`, `useAppStore`, `t()`, `toast`
+- RTL support: `<div dir={language === 'ar' ? 'rtl' : 'ltr'}>`
+- shadcn/ui components: Card, Dialog, Select, Switch, Table, ScrollArea, Badge, Skeleton, etc.
+- lucide-react icons throughout
+- framer-motion for card/table row animations and typing indicator
+- API integration with existing backend routes
+- Bilingual (Arabic/English) via i18n system
