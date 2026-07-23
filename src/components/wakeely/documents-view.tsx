@@ -99,18 +99,14 @@ export function DocumentsView() {
   async function loadDocuments() {
     setLoading(true);
     try {
-      // Fetch all documents by getting all cases with documents
-      const res = await fetch('/api/cases?limit=100');
+      const res = await fetch('/api/documents?limit=100');
       const data = await res.json();
-      const allDocs: DocumentItem[] = [];
-      (data.cases || []).forEach((c: any) => {
-        if (c.documents) {
-          c.documents.forEach((d: DocumentItem) => {
-            allDocs.push({ ...d, caseTitle: c.title, caseNumber: c.caseNumber });
-          });
-        }
-      });
-      setDocuments(allDocs);
+      const docs: DocumentItem[] = (data || []).map((d: any) => ({
+        ...d,
+        caseTitle: d.case?.title || '',
+        caseNumber: d.case?.caseNumber || '',
+      }));
+      setDocuments(docs);
     } catch {
       toast.error(t('common.error', language));
     } finally {
@@ -135,17 +131,25 @@ export function DocumentsView() {
       return;
     }
     try {
-      const res = await fetch(`/api/cases/${formData.caseId}`, {
-        method: 'PUT',
+      const res = await fetch('/api/documents', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          notes: `Document added: ${formData.fileName}`,
+          fileName: formData.fileName,
+          fileType: formData.fileType,
+          category: formData.category,
+          description: formData.description,
+          caseId: formData.caseId,
         }),
       });
-      setDialogOpen(false);
-      setFormData({ fileName: '', fileType: 'pdf', category: 'general', description: '', caseId: '' });
-      toast.success(t('documents.uploadSuccess', language));
-      loadDocuments();
+      if (res.ok) {
+        setDialogOpen(false);
+        setFormData({ fileName: '', fileType: 'pdf', category: 'general', description: '', caseId: '' });
+        toast.success(t('documents.uploadSuccess', language));
+        loadDocuments();
+      } else {
+        toast.error(language === 'ar' ? 'فشل في رفع المستند' : 'Failed to upload document');
+      }
     } catch {
       toast.error(t('common.error', language));
     }
