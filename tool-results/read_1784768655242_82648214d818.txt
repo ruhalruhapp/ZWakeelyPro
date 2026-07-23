@@ -1,0 +1,553 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { motion, useScroll, useTransform } from 'framer-motion';
+     4→     4→import { useRef } from 'react';
+     5→     5→import {
+     6→     6→  Scale, Shield, Clock, FileText, Users, BarChart3, Calendar,
+     7→     7→  Brain, ArrowRight, CheckCircle2, Star, Zap, Globe2, Lock,
+     8→     8→  TrendingUp, Briefcase, Gavel, Target, ChevronRight
+     9→     9→} from 'lucide-react';
+    10→    10→
+    11→    11→/* ─────────── Animation Variants ─────────── */
+    12→    12→const fadeUp = {
+    13→    13→  hidden: { opacity: 0, y: 40 },
+    14→    14→  visible: (i: number = 0) => ({
+    15→    15→    opacity: 1, y: 0,
+    16→    16→    transition: { delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    17→    17→  }),
+    18→    18→};
+    19→    19→
+    20→    20→const stagger = {
+    21→    21→  visible: { transition: { staggerChildren: 0.12 } },
+    22→    22→};
+    23→    23→
+    24→    24→const scaleIn = {
+    25→    25→  hidden: { opacity: 0, scale: 0.8 },
+    26→    26→  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: 'easeOut' } },
+    27→    27→};
+    28→    28→
+    29→    29→/* ─────────── Data ─────────── */
+    30→    30→const FEATURES = [
+    31→    31→  { icon: Briefcase, title: 'Case Management', desc: 'Track every case from intake to closure. Organize files, timelines, parties, and critical dates in one unified hub.', color: 'from-emerald-500 to-teal-500' },
+    32→    32→  { icon: Target, title: 'Smart Task Board', desc: 'Kanban-style boards with drag-and-drop. Assign tasks to team members, set deadlines, and never miss a deliverable.', color: 'from-amber-500 to-orange-500' },
+    33→    33→  { icon: FileText, title: 'Document Vault', desc: 'Version-controlled document management with folders, tags, and advanced search. Upload, organize, and retrieve instantly.', color: 'from-blue-500 to-cyan-500' },
+    34→    34→  { icon: Clock, title: 'Time Tracking', desc: 'One-click timers, manual entries, and automatic billing calculations. Every billable minute captured accurately.', color: 'from-violet-500 to-purple-500' },
+    35→    35→  { icon: Calendar, title: 'Court Calendar', desc: 'All hearings, filings, deadlines, and meetings in one calendar. Color-coded by event type with smart reminders.', color: 'from-rose-500 to-pink-500' },
+    36→    36→  { icon: Users, title: 'Team Collaboration', desc: 'Manage associates, paralegals, and partners. Role-based assignments with real-time task tracking.', color: 'from-sky-500 to-blue-500' },
+    37→    37→  { icon: Shield, title: 'Evidence & Discovery', desc: 'Chain-of-custody tracking, privilege logs, and evidence categorization. Litigation-ready organization.', color: 'from-red-500 to-rose-500' },
+    38→    38→  { icon: Brain, title: 'AI Legal Assistant', desc: 'AI-powered legal research, document analysis, and case strategy suggestions. Your 24/7 legal co-pilot.', color: 'from-indigo-500 to-violet-500' },
+    39→    39→  { icon: BarChart3, title: 'Reports & Analytics', desc: 'Real-time dashboards with revenue tracking, case velocity, team productivity, and financial forecasting.', color: 'from-teal-500 to-emerald-500' },
+    40→    40→];
+    41→    41→
+    42→    42→const AUDIENCES = [
+    43→    43→  { role: 'Senior Partners', desc: 'Get a bird\'s-eye view of your entire firm. Track revenue, case pipelines, and team performance from a single dashboard.', icon: Gavel },
+    44→    44→  { role: 'Managing Associates', desc: 'Stay on top of every case detail. Manage deadlines, coordinate with team members, and ensure nothing falls through the cracks.', icon: Scale },
+    45→    45→  { role: 'Solo Practitioners', desc: 'Run your entire practice from one platform. From client intake to billing, everything you need without the overhead.', icon: Zap },
+    46→    46→  { role: 'In-House Counsel', desc: 'Manage external counsel, track litigation matters, and keep stakeholders informed with automated reporting.', icon: Globe2 },
+    47→    47→];
+    48→    48→
+    49→    49→const STATS = [
+    50→    50→  { value: '10x', label: 'Faster Case Setup', sublabel: 'vs. manual processes' },
+    51→    51→  { value: '40%', label: 'More Billable Hours', sublabel: 'captured automatically' },
+    52→    52→  { value: '99.9%', label: 'Uptime', sublabel: 'enterprise-grade reliability' },
+    53→    53→  { value: '500+', label: 'Law Firms', sublabel: 'trust Wakeely Pro' },
+    54→    54→];
+    55→    55→
+    56→    56→const HOW_IT_WORKS = [
+    57→    57→  { step: '01', title: 'Create Your Account', desc: 'Sign up in under 60 seconds. No credit card required. Import your existing cases or start fresh.', cta: 'Get Started Free' },
+    58→    58→  { step: '02', title: 'Set Up Your Cases', desc: 'Add your active cases with all details — parties, court info, critical dates, and opposing counsel. Our guided setup makes it effortless.', cta: 'Import Cases' },
+    59→    59→  { step: '03', title: 'Invite Your Team', desc: 'Add associates, paralegals, and staff. Assign roles and permissions. Everyone stays aligned in real-time.', cta: 'Add Team Members' },
+    60→    60→  { step: '04', title: 'Run Your Practice', desc: 'Manage tasks, track time, calendar events, billing, and documents — all from one powerful platform.', cta: 'Start Managing' },
+    61→    61→];
+    62→    62→
+    63→    63→/* ─────────── Components ─────────── */
+    64→    64→
+    65→    65→function Navbar() {
+    66→    66→  return (
+    67→    67→    <motion.nav
+    68→    68→      initial={{ y: -100 }}
+    69→    69→      animate={{ y: 0 }}
+    70→    70→      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    71→    71→      className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60"
+    72→    72→    >
+    73→    73→      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    74→    74→        <div className="flex items-center gap-2.5">
+    75→    75→          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+    76→    76→            <Scale className="w-5 h-5 text-white" strokeWidth={2.5} />
+    77→    77→          </div>
+    78→    78→          <span className="font-extrabold text-xl tracking-tight">
+    79→    79→            Wakeely <span className="text-emerald-600">Pro</span>
+    80→    80→          </span>
+    81→    81→        </div>
+    82→    82→        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+    83→    83→          <a href="#features" className="hover:text-emerald-600 transition-colors">Features</a>
+    84→    84→          <a href="#who" className="hover:text-emerald-600 transition-colors">Who It\'s For</a>
+    85→    85→          <a href="#how" className="hover:text-emerald-600 transition-colors">How It Works</a>
+    86→    86→        </div>
+    87→    87→        <div className="flex items-center gap-3">
+    88→    88→          <a
+    89→    89→            href="/"
+    90→    90→            className="hidden sm:inline-flex text-sm font-semibold text-slate-700 hover:text-emerald-600 transition-colors"
+    91→    91→          >
+    92→    92→            Sign In
+    93→    93→          </a>
+    94→    94→          <a
+    95→    95→            href="/"
+    96→    96→            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 hover:-translate-y-0.5"
+    97→    97→          >
+    98→    98→            Start Free <ArrowRight className="w-4 h-4" />
+    99→    99→          </a>
+   100→   100→        </div>
+   101→   101→      </div>
+   102→   102→    </motion.nav>
+   103→   103→  );
+   104→   104→}
+   105→   105→
+   106→   106→function HeroSection() {
+   107→   107→  const ref = useRef(null);
+   108→   108→  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+   109→   109→  const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
+   110→   110→  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+   111→   111→
+   112→   112→  return (
+   113→   113→    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+   114→   114→      {/* Background */}
+   115→   115→      <div className="absolute inset-0 -z-10">
+   116→   116→        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-emerald-50/30" />
+   117→   117→        <div className="absolute top-20 left-1/4 w-[600px] h-[600px] bg-emerald-400/10 rounded-full blur-[120px]" />
+   118→   118→        <div className="absolute bottom-20 right-1/4 w-[500px] h-[500px] bg-teal-400/10 rounded-full blur-[120px]" />
+   119→   119→        {/* Grid pattern */}
+   120→   120→        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
+   121→   121→      </div>
+   122→   122→
+   123→   123→      <motion.div style={{ y, opacity }} className="relative max-w-6xl mx-auto px-6 text-center">
+   124→   124→        {/* Badge */}
+   125→   125→        <motion.div
+   126→   126→          initial={{ opacity: 0, y: 20 }}
+   127→   127→          animate={{ opacity: 1, y: 0 }}
+   128→   128→          transition={{ duration: 0.5, delay: 0.1 }}
+   129→   129→          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-sm font-semibold mb-8"
+   130→   130→        >
+   131→   131→          <Zap className="w-4 h-4" />
+   132→   132→          Built for Lawyers. Powered by AI.
+   133→   133→          <ChevronRight className="w-4 h-4" />
+   134→   134→        </motion.div>
+   135→   135→
+   136→   136→        {/* Headline */}
+   137→   137→        <motion.h1
+   138→   138→          initial={{ opacity: 0, y: 30 }}
+   139→   139→          animate={{ opacity: 1, y: 0 }}
+   140→   140→          transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+   141→   141→          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[0.95] mb-6"
+   142→   142→        >
+   143→   143→          <span className="text-slate-900">Run Your </span>
+   144→   144→          <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+   145→   145→            Entire Practice
+   146→   146→          </span>
+   147→   147→          <br />
+   148→   148→          <span className="text-slate-900">From One Platform</span>
+   149→   149→        </motion.h1>
+   150→   150→
+   151→   151→        {/* Subheadline */}
+   152→   152→        <motion.p
+   153→   153→          initial={{ opacity: 0, y: 20 }}
+   154→   154→          animate={{ opacity: 1, y: 0 }}
+   155→   155→          transition={{ duration: 0.6, delay: 0.4 }}
+   156→   156→          className="max-w-2xl mx-auto text-lg sm:text-xl text-slate-500 leading-relaxed mb-10"
+   157→   157→        >
+   158→   158→          Wakeely Pro is the <strong className="text-slate-700">all-in-one litigation management platform</strong> built
+   159→   159→          specifically for law firms. Cases, tasks, billing, documents, calendar, AI assistant —
+   160→   160→          <strong className="text-slate-700"> everything in one place</strong>.
+   161→   161→        </motion.p>
+   162→   162→
+   163→   163→        {/* CTA Buttons */}
+   164→   164→        <motion.div
+   165→   165→          initial={{ opacity: 0, y: 20 }}
+   166→   166→          animate={{ opacity: 1, y: 0 }}
+   167→   167→          transition={{ duration: 0.6, delay: 0.55 }}
+   168→   168→          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+   169→   169→        >
+   170→   170→          <a
+   171→   171→            href="/"
+   172→   172→            className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-lg rounded-2xl shadow-2xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all duration-300 hover:-translate-y-1"
+   173→   173→          >
+   174→   174→            Start Free — No Credit Card
+   175→   175→            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+   176→   176→            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 opacity-0 group-hover:opacity-20 transition-opacity" />
+   177→   177→          </a>
+   178→   178→          <a
+   179→   179→            href="#features"
+   180→   180→            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-slate-700 font-bold text-lg rounded-2xl border-2 border-slate-200 hover:border-emerald-300 hover:text-emerald-700 transition-all duration-300 hover:-translate-y-1 shadow-sm"
+   181→   181→          >
+   182→   182→            See How It Works
+   183→   183→          </a>
+   184→   184→        </motion.div>
+   185→   185→
+   186→   186→        {/* Trust bar */}
+   187→   187→        <motion.div
+   188→   188→          initial={{ opacity: 0 }}
+   189→   189→          animate={{ opacity: 1 }}
+   190→   190→          transition={{ duration: 0.8, delay: 0.8 }}
+   191→   191→          className="mt-16 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400"
+   192→   192→        >
+   193→   193→          <div className="flex items-center gap-2">
+   194→   194→            <Lock className="w-4 h-4" />
+   195→   195→            <span>SOC 2 Compliant</span>
+   196→   196→          </div>
+   197→   197→          <div className="w-1 h-1 rounded-full bg-slate-300" />
+   198→   198→          <div className="flex items-center gap-2">
+   199→   199→            <Shield className="w-4 h-4" />
+   200→   200→            <span>256-bit Encryption</span>
+   201→   201→          </div>
+   202→   202→          <div className="w-1 h-1 rounded-full bg-slate-300" />
+   203→   203→          <div className="flex items-center gap-2">
+   204→   204→            <Globe2 className="w-4 h-4" />
+   205→   205→            <span>Arabic & English</span>
+   206→   206→          </div>
+   207→   207→        </motion.div>
+   208→   208→      </motion.div>
+   209→   209→
+   210→   210→      {/* Scroll indicator */}
+   211→   211→      <motion.div
+   212→   212→        initial={{ opacity: 0 }}
+   213→   213→        animate={{ opacity: 1 }}
+   214→   214→        transition={{ delay: 1.5 }}
+   215→   215→        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+   216→   216→      >
+   217→   217→        <motion.div
+   218→   218→          animate={{ y: [0, 8, 0] }}
+   219→   219→          transition={{ repeat: Infinity, duration: 1.5 }}
+   220→   220→          className="w-6 h-10 rounded-full border-2 border-slate-300 flex justify-center pt-2"
+   221→   221→        >
+   222→   222→          <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+   223→   223→        </motion.div>
+   224→   224→      </motion.div>
+   225→   225→    </section>
+   226→   226→  );
+   227→   227→}
+   228→   228→
+   229→   229→function StatsSection() {
+   230→   230→  return (
+   231→   231→    <section className="py-20 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 relative overflow-hidden">
+   232→   232→      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
+   233→   233→      <div className="max-w-6xl mx-auto px-6 relative">
+   234→   234→        <motion.div
+   235→   235→          variants={stagger}
+   236→   236→          initial="hidden"
+   237→   237→          whileInView="visible"
+   238→   238→          viewport={{ once: true, margin: '-100px' }}
+   239→   239→          className="grid grid-cols-2 md:grid-cols-4 gap-8"
+   240→   240→        >
+   241→   241→          {STATS.map((stat, i) => (
+   242→   242→            <motion.div key={stat.label} variants={fadeUp} custom={i} className="text-center">
+   243→   243→              <div className="text-4xl sm:text-5xl font-black text-white mb-2">{stat.value}</div>
+   244→   244→              <div className="text-emerald-100 font-bold text-lg">{stat.label}</div>
+   245→   245→              <div className="text-emerald-200/70 text-sm mt-1">{stat.sublabel}</div>
+   246→   246→            </motion.div>
+   247→   247→          ))}
+   248→   248→        </motion.div>
+   249→   249→      </div>
+   250→   250→    </section>
+   251→   251→  );
+   252→   252→}
+   253→   253→
+   254→   254→function FeaturesSection() {
+   255→   255→  return (
+   256→   256→    <section id="features" className="py-24 sm:py-32 bg-white">
+   257→   257→      <div className="max-w-7xl mx-auto px-6">
+   258→   258→        {/* Section Header */}
+   259→   259→        <motion.div
+   260→   260→          initial="hidden"
+   261→   261→          whileInView="visible"
+   262→   262→          viewport={{ once: true, margin: '-100px' }}
+   263→   263→          variants={stagger}
+   264→   264→          className="text-center max-w-3xl mx-auto mb-20"
+   265→   265→        >
+   266→   266→          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-sm font-bold mb-6">
+   267→   267→            <Star className="w-4 h-4" /> POWERFUL FEATURES
+   268→   268→          </motion.div>
+   269→   269→          <motion.h2 variants={fadeUp} custom={1} className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-6">
+   270→   270→            Everything Your Law Firm Needs.
+   271→   271→            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent"> Nothing It Doesn\'t.</span>
+   272→   272→          </motion.h2>
+   273→   273→          <motion.p variants={fadeUp} custom={2} className="text-xl text-slate-500 leading-relaxed">
+   274→   274→            Nine powerful modules designed specifically for litigation practice. No bloat, no fluff —
+   275→   275→            just the tools that <strong className="text-slate-700">actually move cases forward</strong>.
+   276→   276→          </motion.p>
+   277→   277→        </motion.div>
+   278→   278→
+   279→   279→        {/* Feature Cards */}
+   280→   280→        <motion.div
+   281→   281→          variants={stagger}
+   282→   282→          initial="hidden"
+   283→   283→          whileInView="visible"
+   284→   284→          viewport={{ once: true, margin: '-50px' }}
+   285→   285→          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+   286→   286→        >
+   287→   287→          {FEATURES.map((feature, i) => (
+   288→   288→            <motion.div
+   289→   289→              key={feature.title}
+   290→   290→              variants={scaleIn}
+   291→   291→              custom={i}
+   292→   292→              className="group relative p-8 rounded-3xl border border-slate-200 bg-white hover:border-emerald-200 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 hover:-translate-y-2"
+   293→   293→            >
+   294→   294→              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+   295→   295→                <feature.icon className="w-7 h-7 text-white" strokeWidth={2} />
+   296→   296→              </div>
+   297→   297→              <h3 className="text-xl font-extrabold text-slate-900 mb-3">{feature.title}</h3>
+   298→   298→              <p className="text-slate-500 leading-relaxed">{feature.desc}</p>
+   299→   299→            </motion.div>
+   300→   300→          ))}
+   301→   301→        </motion.div>
+   302→   302→      </div>
+   303→   303→    </section>
+   304→   304→  );
+   305→   305→}
+   306→   306→
+   307→   307→function WhoIsItForSection() {
+   308→   308→  return (
+   309→   309→    <section id="who" className="py-24 sm:py-32 bg-slate-50">
+   310→   310→      <div className="max-w-7xl mx-auto px-6">
+   311→   311→        <motion.div
+   312→   312→          initial="hidden"
+   313→   313→          whileInView="visible"
+   314→   314→          viewport={{ once: true, margin: '-100px' }}
+   315→   315→          variants={stagger}
+   316→   316→          className="text-center max-w-3xl mx-auto mb-20"
+   317→   317→        >
+   318→   318→          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-sm font-bold mb-6">
+   319→   319→            <Users className="w-4 h-4" /> BUILT FOR LEGAL PROFESSIONALS
+   320→   320→          </motion.div>
+   321→   321→          <motion.h2 variants={fadeUp} custom={1} className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-6">
+   322→   322→            Designed for <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Every Legal Role</span>
+   323→   323→          </motion.h2>
+   324→   324→          <motion.p variants={fadeUp} custom={2} className="text-xl text-slate-500 leading-relaxed">
+   325→   325→            Whether you\'re a solo practitioner or managing a 50-lawyer firm, Wakeely Pro adapts to how <strong className="text-slate-700">you</strong> work.
+   326→   326→          </motion.p>
+   327→   327→        </motion.div>
+   328→   328→
+   329→   329→        <motion.div
+   330→   330→          variants={stagger}
+   331→   331→          initial="hidden"
+   332→   332→          whileInView="visible"
+   333→   333→          viewport={{ once: true, margin: '-50px' }}
+   334→   334→          className="grid md:grid-cols-2 gap-8"
+   335→   335→        >
+   336→   336→          {AUDIENCES.map((audience, i) => (
+   337→   337→            <motion.div
+   338→   338→              key={audience.role}
+   339→   339→              variants={fadeUp}
+   340→   340→              custom={i}
+   341→   341→              className="relative p-8 rounded-3xl bg-white border border-slate-200 hover:border-emerald-200 transition-all duration-500 hover:shadow-xl"
+   342→   342→            >
+   343→   343→              <div className="flex items-start gap-5">
+   344→   344→                <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center shrink-0">
+   345→   345→                  <audience.icon className="w-7 h-7 text-emerald-600" strokeWidth={2} />
+   346→   346→                </div>
+   347→   347→                <div>
+   348→   348→                  <h3 className="text-2xl font-extrabold text-slate-900 mb-3">{audience.role}</h3>
+   349→   349→                  <p className="text-slate-500 leading-relaxed">{audience.desc}</p>
+   350→   350→                </div>
+   351→   351→              </div>
+   352→   352→            </motion.div>
+   353→   353→          ))}
+   354→   354→        </motion.div>
+   355→   355→      </div>
+   356→   356→    </section>
+   357→   357→  );
+   358→   358→}
+   359→   359→
+   360→   360→function HowItWorksSection() {
+   361→   361→  return (
+   362→   362→    <section id="how" className="py-24 sm:py-32 bg-white">
+   363→   363→      <div className="max-w-5xl mx-auto px-6">
+   364→   364→        <motion.div
+   365→   365→          initial="hidden"
+   366→   366→          whileInView="visible"
+   367→   367→          viewport={{ once: true, margin: '-100px' }}
+   368→   368→          variants={stagger}
+   369→   369→          className="text-center max-w-3xl mx-auto mb-20"
+   370→   370→        >
+   371→   371→          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-sm font-bold mb-6">
+   372→   372→            <TrendingUp className="w-4 h-4" /> GET STARTED IN MINUTES
+   373→   373→          </motion.div>
+   374→   374→          <motion.h2 variants={fadeUp} custom={1} className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-6">
+   375→   375→            Up and Running in <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">4 Simple Steps</span>
+   376→   376→          </motion.h2>
+   377→   377→        </motion.div>
+   378→   378→
+   379→   379→        <div className="relative">
+   380→   380→          {/* Vertical line */}
+   381→   381→          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-emerald-200 via-teal-200 to-transparent hidden sm:block" />
+   382→   382→
+   383→   383→          <motion.div
+   384→   384→            variants={stagger}
+   385→   385→            initial="hidden"
+   386→   386→            whileInView="visible"
+   387→   387→            viewport={{ once: true, margin: '-50px' }}
+   388→   388→            className="space-y-12"
+   389→   389→          >
+   390→   390→            {HOW_IT_WORKS.map((step, i) => (
+   391→   391→              <motion.div
+   392→   392→                key={step.step}
+   393→   393→                variants={fadeUp}
+   394→   394→                custom={i}
+   395→   395→                className={`relative flex flex-col md:flex-row items-start gap-6 md:gap-12 ${i % 2 === 1 ? 'md:flex-row-reverse' : ''}`}
+   396→   396→              >
+   397→   397→                {/* Number circle */}
+   398→   398→                <div className="absolute left-8 md:left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-black text-xl shadow-xl shadow-emerald-500/30 z-10 hidden sm:flex">
+   399→   399→                  {step.step}
+   400→   400→                </div>
+   401→   401→
+   402→   402→                {/* Mobile number */}
+   403→   403→                <div className="sm:hidden w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-black text-sm shadow-lg shrink-0">
+   404→   404→                  {step.step}
+   405→   405→                </div>
+   406→   406→
+   407→   407→                {/* Content card */}
+   408→   408→                <div className={`ml-20 md:ml-0 md:w-[calc(50%-3rem)] ${i % 2 === 1 ? 'md:text-left' : 'md:text-right'}`}>
+   409→   409→                  <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 hover:border-emerald-200 hover:shadow-lg transition-all duration-300">
+   410→   410→                    <h3 className="text-2xl font-extrabold text-slate-900 mb-3">{step.title}</h3>
+   411→   411→                    <p className="text-slate-500 leading-relaxed mb-4">{step.desc}</p>
+   412→   412→                    <span className="inline-flex items-center gap-2 text-emerald-600 font-bold text-sm hover:gap-3 transition-all cursor-pointer">
+   413→   413→                      {step.cta} <ArrowRight className="w-4 h-4" />
+   414→   414→                    </span>
+   415→   415→                  </div>
+   416→   416→                </div>
+   417→   417→
+   418→   418→                {/* Spacer for opposite side */}
+   419→   419→                <div className="hidden md:block md:w-[calc(50%-3rem)]" />
+   420→   420→              </motion.div>
+   421→   421→            ))}
+   422→   422→          </motion.div>
+   423→   423→        </div>
+   424→   424→      </div>
+   425→   425→    </section>
+   426→   426→  );
+   427→   427→}
+   428→   428→
+   429→   429→function CTASection() {
+   430→   430→  return (
+   431→   431→    <section className="py-24 sm:py-32 relative overflow-hidden">
+   432→   432→      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900" />
+   433→   433→      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:48px_48px]" />
+   434→   434→      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[150px]" />
+   435→   435→
+   436→   436→      <div className="relative max-w-4xl mx-auto px-6 text-center">
+   437→   437→        <motion.div
+   438→   438→          initial="hidden"
+   439→   439→          whileInView="visible"
+   440→   440→          viewport={{ once: true, margin: '-100px' }}
+   441→   441→          variants={stagger}
+   442→   442→        >
+   443→   443→          <motion.h2
+   444→   444→            variants={fadeUp}
+   445→   445→            className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight mb-6 leading-tight"
+   446→   446→          >
+   447→   447→            Ready to Transform
+   448→   448→            <br />
+   449→   449→            <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+   450→   450→              Your Legal Practice?
+   451→   451→            </span>
+   452→   452→          </motion.h2>
+   453→   453→          <motion.p variants={fadeUp} custom={1} className="text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+   454→   454→            Join hundreds of law firms already using Wakeely Pro to manage cases faster,
+   455→   455→            bill more accurately, and deliver better client outcomes.
+   456→   456→          </motion.p>
+   457→   457→
+   458→   458→          <motion.div variants={fadeUp} custom={2} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+   459→   459→            <a
+   460→   460→              href="/"
+   461→   461→              className="group inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-lg rounded-2xl shadow-2xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all duration-300 hover:-translate-y-1"
+   462→   462→            >
+   463→   463→              Start Your Free Trial
+   464→   464→              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+   465→   465→            </a>
+   466→   466→          </motion.div>
+   467→   467→
+   468→   468→          <motion.div variants={fadeUp} custom={3} className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500">
+   469→   469→            <div className="flex items-center gap-2">
+   470→   470→              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+   471→   471→              <span>Free 14-day trial</span>
+   472→   472→            </div>
+   473→   473→            <div className="flex items-center gap-2">
+   474→   474→              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+   475→   475→              <span>No credit card required</span>
+   476→   476→            </div>
+   477→   477→            <div className="flex items-center gap-2">
+   478→   478→              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+   479→   479→              <span>Cancel anytime</span>
+   480→   480→            </div>
+   481→   481→            <div className="flex items-center gap-2">
+   482→   482→              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+   483→   483→              <span>Arabic & English</span>
+   484→   484→            </div>
+   485→   485→          </motion.div>
+   486→   486→        </motion.div>
+   487→   487→      </div>
+   488→   488→    </section>
+   489→   489→  );
+   490→   490→}
+   491→   491→
+   492→   492→function Footer() {
+   493→   493→  return (
+   494→   494→    <footer className="bg-slate-950 text-slate-400 py-16">
+   495→   495→      <div className="max-w-7xl mx-auto px-6">
+   496→   496→        <div className="grid md:grid-cols-4 gap-10 mb-12">
+   497→   497→          <div className="md:col-span-2">
+   498→   498→            <div className="flex items-center gap-2.5 mb-4">
+   499→   499→              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+   500→   500→                <Scale className="w-5 h-5 text-white" strokeWidth={2.5} />
+   501→   501→              </div>
+   502→   502→              <span className="font-extrabold text-xl text-white tracking-tight">
+   503→   503→                Wakeely <span className="text-emerald-400">Pro</span>
+   504→   504→              </span>
+   505→   505→            </div>
+   506→   506→            <p className="text-slate-500 leading-relaxed max-w-md">
+   507→   507→              The all-in-one litigation case management platform built specifically for law firms in the Gulf region.
+   508→   508→              Manage your entire practice from a single, powerful interface.
+   509→   509→            </p>
+   510→   510→          </div>
+   511→   511→          <div>
+   512→   512→            <h4 className="font-bold text-white mb-4">Product</h4>
+   513→   513→            <ul className="space-y-3 text-sm">
+   514→   514→              <li><a href="#features" className="hover:text-emerald-400 transition-colors">Features</a></li>
+   515→   515→              <li><a href="#how" className="hover:text-emerald-400 transition-colors">How It Works</a></li>
+   516→   516→              <li><a href="#" className="hover:text-emerald-400 transition-colors">Pricing</a></li>
+   517→   517→              <li><a href="#" className="hover:text-emerald-400 transition-colors">Changelog</a></li>
+   518→   518→            </ul>
+   519→   519→          </div>
+   520→   520→          <div>
+   521→   521→            <h4 className="font-bold text-white mb-4">Company</h4>
+   522→   522→            <ul className="space-y-3 text-sm">
+   523→   523→              <li><a href="#" className="hover:text-emerald-400 transition-colors">About</a></li>
+   524→   524→              <li><a href="#" className="hover:text-emerald-400 transition-colors">Blog</a></li>
+   525→   525→              <li><a href="#" className="hover:text-emerald-400 transition-colors">Contact</a></li>
+   526→   526→              <li><a href="#" className="hover:text-emerald-400 transition-colors">Privacy Policy</a></li>
+   527→   527→            </ul>
+   528→   528→          </div>
+   529→   529→        </div>
+   530→   530→        <div className="border-t border-slate-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+   531→   531→          <p>&copy; {new Date().getFullYear()} Wakeely Pro. All rights reserved.</p>
+   532→   532→          <p className="text-slate-600">Built for lawyers. Powered by technology.</p>
+   533→   533→        </div>
+   534→   534→      </div>
+   535→   535→    </footer>
+   536→   536→  );
+   537→   537→}
+   538→   538→
+   539→   539→/* ─────────── Page ─────────── */
+   540→   540→export default function LandingPage() {
+   541→   541→  return (
+   542→   542→    <div className="min-h-screen bg-white">
+   543→   543→      <Navbar />
+   544→   544→      <HeroSection />
+   545→   545→      <StatsSection />
+   546→   546→      <FeaturesSection />
+   547→   547→      <WhoIsItForSection />
+   548→   548→      <HowItWorksSection />
+   549→   549→      <CTASection />
+   550→   550→      <Footer />
+   551→   551→    </div>
+   552→   552→  );
+   553→   553→}
